@@ -18,7 +18,7 @@ describe('Controller', function() {
 					done();
 				});
 			});
-			em.emit('Controller.Index', request, {});
+			em.emit('Controller.Index', request, {}, function () {});
 		});
 	});
 });
