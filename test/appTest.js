@@ -1,127 +1,54 @@
-var ENPublisher = require('../lib/app.js');
+var App = require('../lib/app.js');
 require('should');
 
 describe('App', function() {
 	describe('#flow()', function() {
-		it('Emit Before.Controller event', function(done) {
-			var app = new ENPublisher();
-			app.once('Before.Controller', function(req, i, next) {
-				req.testValue.should.equal('Request!');
-				next();
-				done();
-			});
-			app.flow('Index')({testValue:'Request!'}, {});
-		});
-		it('Emit Controller.Index event', function(done) {
-			var app = new ENPublisher();
-			app.once('Controller.Index', function(request, params, next) {
-				request.testValue.should.equal('Request!');
-				next();
-				done();
-			});
-			app.flow('Index')({testValue:'Request!'}, {});
-		});
-		it('Emit After.Controller event', function(done) {
-			var app = new ENPublisher();
-			app.once('After.Controller', function(request, params, next) {
-				request.testValue.should.equal('Request!');
-				next();
-				done();
-			});
-			app.flow('Index')({testValue:'Request!'}, {});
-		});
-		it('Emit Before.Model event', function(done) {
-			var app = new ENPublisher();
-			app.once('Model.Index', function(i, o, next) {
-				next();
-				done();
-			});
-			app.flow('Index')({}, {});
-		});
-		it('Emit Model.Index event', function(done) {
-			var app = new ENPublisher();
-			app.once('Model.Index', function(iParams, oParams, next) {
-				next();
-				done();
-			});
-			app.flow('Index')({}, {});
-		});
-		it('Emit After.Model event', function(done) {
-			var app = new ENPublisher();
-			app.once('After.Model', function(i, o, next) {
-				next();
-				done();
-			});
-			app.flow('Index')({}, {});
-		});
-		it('Emit Before.View event', function(done) {
-			var app = new ENPublisher();
-			app.once('Before.View', function(response, params) {
-				response.testValue.should.equal('Response!');
-				done();
-			});
-			app.flow('Index')({}, {testValue:'Response!'});
-		});
-		it('Emit View.Index event', function(done) {
-			var app = new ENPublisher();
-			app.once('View.Index', function(response, params) {
-				response.testValue.should.equal('Response!');
-				done();
-			});
-			app.flow('Index')({}, {testValue:'Response!'});
-		});
-		it('Emit After.View event', function(done) {
-			var app = new ENPublisher();
-			app.once('After.View', function(response, params) {
-				response.testValue.should.equal('Response!');
-				done();
-			});
-			app.flow('Index')({}, {testValue:'Response!'});
-		});
-		it('Order to call the event', function(done) {
-			var app = new ENPublisher();
-			var flow = {
-					events : new Array(),
-					check : function(app, ev) {
-						var self = this;
-						app.once(ev, function(i, o, next) {
-							self.events.push(ev);
-							(next)?next():null;
+		it('C->M->Vの順で、フローにバインドされた全てのイベントリスナを順に実行する。',
+				function(done) {
+					var app = new App();
+					var events = new Array();
+					var check = function (ev) {
+						app.on(ev, function (i,o,next) {
+							events.push(ev);
+							next && next();
 						});
-					}
-				};
-			flow.check(app, 'Before.Controller');
-			flow.check(app, 'Controller.Index');
-			flow.check(app, 'After.Controller');
-			flow.check(app, 'Before.Model');
-			flow.check(app, 'Model.Index');
-			flow.check(app, 'After.Model');
-			flow.check(app, 'Before.View');
-			flow.check(app, 'View.Index');
-			flow.check(app, 'After.View');
-			app.once('After.View', function() {
-				process.nextTick(function() {
-					flow.events[0].should.equal('Before.Controller');
-					flow.events[1].should.equal('Controller.Index');
-					flow.events[2].should.equal('After.Controller');
-					flow.events[3].should.equal('Before.Model');
-					flow.events[4].should.equal('Model.Index');
-					flow.events[5].should.equal('After.Model');
-					flow.events[6].should.equal('Before.View');
-					flow.events[7].should.equal('View.Index');
-					flow.events[8].should.equal('After.View');
-					done();
+					};
+					check('Before.Controller');
+					check('Controller.Index');
+					check('After.Controller');
+					check('Before.Model');
+					check('Model.Index');
+					check('After.Model');
+					check('Before.View');
+					check('View.Index');
+					check('After.View');
+					app.once('After.View', function(i,o,next) {
+						process.nextTick(function() {
+							events[0].should.equal('Before.Controller');
+							events[1].should.equal('Controller.Index');
+							events[2].should.equal('After.Controller');
+							events[3].should.equal('Before.Model');
+							events[4].should.equal('Model.Index');
+							events[5].should.equal('After.Model');
+							events[6].should.equal('Before.View');
+							events[7].should.equal('View.Index');
+							events[8].should.equal('After.View');
+							next&&next();
+							done();
+						});
+					});
+					app.flow('Index')({}, {});
 				});
-			});
-			app.flow('Index')({}, {});
-		});
-		it('Parameters IN/OUT', function(done) {
-			var app = new ENPublisher();
+		it('コントローライベントにはflowの第一引数とInputオブジェクトが渡される。');
+		it('モデルイベントにはInputオブジェクトとOutputオブジェクトが渡される。');
+		it('ビューイベントには実行時の第二引数とOutputオブジェクトが渡される。');
+		it('同名のパラメータはイベント間で引き継がれるので、受け渡しができる。', function(done) {
+			var app = new App();
 			app.on('Controller.Index', function(request, params, next) {
 				params.ControllerValue = 'test';
 				next();
 			});
-			app.on('Model.Index', function(reqParams, resParams,next) {
+			app.on('Model.Index', function(reqParams, resParams, next) {
 				reqParams.ControllerValue.should.equal('test');
 				resParams.ModelValue = reqParams.ControllerValue;
 				next();
@@ -132,9 +59,9 @@ describe('App', function() {
 			});
 			app.flow('Index')({}, {});
 		});
-		it('Process to flow as to run in the flow asynchronous processing',
+		it('引数nextを使うことで、イベント内で非同期処理を実行できる。',
 				function(done) {
-					var app = new ENPublisher();
+					var app = new App();
 					app.on('Controller.Index', function(request, params, next) {
 						process.nextTick(function() {
 							params.cTickValue = 'cTick!';
@@ -143,10 +70,11 @@ describe('App', function() {
 					});
 					app.on('Controller.Index', function(request, params, next) {
 						var fs = require('fs');
-						fs.exists(__dirname+'/indexTest.js', function(exists) {
-							params.cFSValue = 'cFS!';
-							next();
-						});
+						fs.exists(__dirname + '/indexTest.js',
+								function(exists) {
+									params.cFSValue = 'cFS!';
+									next();
+								});
 					});
 					app.on('Model.Index', function(reqParams, resParams, next) {
 						reqParams.cTickValue.should.equal('cTick!');
@@ -158,10 +86,11 @@ describe('App', function() {
 					});
 					app.on('Model.Index', function(reqParams, resParams, next) {
 						var fs = require('fs');
-						fs.exists(__dirname+'/indexTest.js', function(exists) {
-							resParams.mFSValue = 'mFS!';
-							next();
-						});
+						fs.exists(__dirname + '/indexTest.js',
+								function(exists) {
+									resParams.mFSValue = 'mFS!';
+									next();
+								});
 					});
 					app.on('View.Index', function(response, params) {
 						params.mTickValue.should.equal('mTick!');
@@ -170,5 +99,90 @@ describe('App', function() {
 					});
 					app.flow('Index')({}, {});
 				});
+	});
+	describe('#addFlow()', function() {
+		it('フローにリスナを一括登録する。', function (done) {
+			var app = new App();
+			var count = 0;
+			var listener = function (inc) {
+				return function (i, o, next) {
+					count+=inc;
+					next();
+				};
+			};
+			app.addFlow('Index', listener(1), listener(2), listener(4));
+			app.on('After.View', function (i,o,next) {
+				count.should.equal(7);
+				next();
+				done();
+			});
+			app.flow('Index')({}, {});
+		});
+		it('戻り値はflow(フロー名)の戻り値となるので、そのまま実行可能。', function (done) {
+			var app = new App();
+			app.addFlow('Index', function (i,o,next) {
+				done();
+				next();
+			})({},{});
+		});
+		it('第一引数はフロー名になる。', function (done) {
+			var app = new App();
+			app.addFlow('TestFlow', function (i,o,next) {
+				done();
+				next();
+			});
+			app.flow('TestFlow')({},{});
+		});
+		it('第二引数は省略可能。', function (done) {
+			var app = new App();
+			app.on('View.Index', function (i,o,next) {
+				done();
+				next();
+			});
+			app.addFlow('Index')({},{});
+		});
+		it('第二引数はコントローラのリスナを指定。', function (done) {
+			var app = new App();
+			app.addFlow('TestFlow', function () {
+				done();
+			});
+			app.emit('Controller.TestFlow');
+		});
+		it('第三引数は省略可能。', function (done) {
+			var app = new App();
+			var n = function (i, o, next) {
+				next();
+			};
+			app.on('After.View', function (i,o,next) {
+				done();
+				next();
+			});
+			app.addFlow('Index', n)({},{});
+		});
+		it('第三引数はモデルのリスナを指定。', function (done) {
+			var app = new App();
+			app.addFlow('TestFlow',null, function () {
+				done();
+			});
+			app.emit('Model.TestFlow');
+		});
+		it('第四引数は省略可能。', function (done) {
+			var app = new App();
+			var n = function (i, o, next) {
+				next();
+			};
+			app.on('After.View', function (i,o,next) {
+				done();
+				next();
+			});
+			app.addFlow('Index', n, n)({},{});
+		});
+		it('第四引数はビューのリスナを指定。', function (done) {
+			var app = new App();
+			app.addFlow('TestFlow',null,null, function () {
+				done();
+			});
+			app.emit('View.TestFlow');
+		});
 	});
 });

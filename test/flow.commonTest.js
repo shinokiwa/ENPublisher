@@ -1,7 +1,8 @@
-var view = require('../lib/views/common.js');
+var common = require('../lib/flows/common.js');
 require('should');
 
-describe('view.common', function() {
+describe('common.view', function() {
+	var view = common.view;
 	describe('#tempalte', function() {
 		it('Call response.render() and through parameters', function(done) {
 			view.template('index')({
