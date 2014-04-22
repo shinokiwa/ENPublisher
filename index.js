@@ -1,4 +1,4 @@
-var ENPublisher = require('./lib/index.js');
+var ENPublisher = require('./app/index.js');
 var app = ENPublisher.create ();
 
-ENPublisher.process(app);
+app.process();

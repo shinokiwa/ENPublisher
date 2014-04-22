@@ -1,4 +1,4 @@
-var view = require('../lib/flows/index.js');
+var view = require('../app/flows/index.js');
 require('should');
 
 describe('flows.index', function() {

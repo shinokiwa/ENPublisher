@@ -11,7 +11,6 @@ var flow = require ('./flow.js');
 
 module.exports.create = function () {
 	var app = new App();
-
 	var ex = express();
 	ex.configure(function() {
 		ex.set('port', 8000);
@@ -26,16 +25,16 @@ module.exports.create = function () {
 		//ex.use(require('stylus').middleware(path.join(__dirname, '../templates/default/assets/css/')));
 		ex.use(express["static"](path.join(__dirname, '../templates/default/assets/')));
 		ex.use(app.flow('Error404'));
+		
+		flow(app, ex);
 	});
-	
-	flow(app, ex);
-	
-	app.express = ex;
-	return app;
-};
 
-module.exports.process = function(app) {
-	http.createServer(app.express).listen( app.express.get('port'), function() {
-		console.log("Express server listening on port " + (app.express.get('port')));
+	app.on('Process', function(next){
+		http.createServer(ex).listen( ex.get('port'), function() {
+			console.log("Express server listening on port " + (ex.get('port')));
+		});
+		next&&next();
 	});
+
+	return app;
 };

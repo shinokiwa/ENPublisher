@@ -5,8 +5,6 @@
  */
 var EventEmitter = require('events').EventEmitter;
 var util = require("util");
-var Input = require('./input.js');
-var Output = require('./output.js');
 
 var app = module.exports = function() {
 	EventEmitter.call(this);
@@ -14,35 +12,33 @@ var app = module.exports = function() {
 
 util.inherits(app, EventEmitter);
 
-app.prototype.express = null;
+app.prototype.process = function() {
+	transaction(this, [ [ 'Initialize' ], [ 'Process' ] ], 0);
+};
 
 app.prototype.flow = function(flow) {
 	var self = this;
 	return function(request, response) {
-		var input = new Input (request);
-		var output = new Output ();
-		transaction(self, [ [ 'Before.Controller', request, input ],
-				[ 'Controller.' + flow, request, input ],
-				[ 'After.Controller', request, input ],
-				[ 'Before.Model', input, output ],
-				[ 'Model.' + flow, input, output ],
-				[ 'After.Model', input, output ],
-				[ 'Before.View', response, output ],
-				[ 'View.' + flow, response, output ],
-				[ 'After.View', response, output ]], 0);
+		var input = {};
+		var output = {};
+		transaction(self, [
+		                   [ 'Before.Controller', request, input ],
+		                   [ 'Controller.' + flow, request, input ],
+		                   [ 'After.Controller', request, input ],
+		                   [ 'Before.Model', input, output ],
+		                   [ 'Model.' + flow, input, output ],
+		                   [ 'After.Model', input, output ],
+		                   [ 'Before.View', response, output ],
+		                   [ 'View.' + flow, response, output ],
+		                   [ 'After.View', response, output ]
+		                   ], 0);
 	};
 };
 
-app.prototype.addFlow = function (flow, controller, model, view) {
-	if (controller) {
-		this.on('Controller.'+flow, controller);
-	}
-	if (model) {
-		this.on('Model.'+flow, model);
-	}
-	if (view) {
-		this.on('View.'+flow, view);
-	}
+app.prototype.addFlow = function(flow, controller, model, view) {
+	controller && this.on('Controller.' + flow, controller);
+	model && this.on('Model.' + flow, model);
+	view && this.on('View.' + flow, view);
 	return this.flow(flow);
 };
 
