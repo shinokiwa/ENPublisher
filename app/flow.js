@@ -1,5 +1,8 @@
-module.exports = function (app, ex) {
+module.exports = function (app, express, configure) {
 	var common = require ('./flows/common.js');
+	var c = common.controller;
+	var m = common.model;
+	var v = common.view;
 	// TODO: move to other module
 	app.on('After.Controller', function(request, input, next) {
 		input.session = function () {
@@ -9,16 +12,20 @@ module.exports = function (app, ex) {
 	});
 	
 	var index = require ('./flows/index.js');
-	ex.get('/', app.addFlow('Index', index.c, index.m, index.v));
+	express.get('/', app.addFlow('Index', index.c, index.m, index.v));
 
-	ex.get('/setting/', app.addFlow('Setting', null, null, common.view.redirect(302,'/setting/login/')));
+	express.get('/setting/', app.addFlow('Setting', null, null, v.redirect(302,'/setting/login/')));
 
 	var login = require ('./flows/login.js');
-	ex.get('/setting/login/', app.addFlow('Login', common.controller.requireAuth, common.model.requireAuth, login.v));
+	express.get('/setting/login/', app.addFlow('Login', c.requireAuth, login.m, login.v));
 
-	ex.post('/setting/login/', app.flow('DoLogin'));
-	ex.get('/setting/logout/', app.flow('DoLogout'));
-	ex.get('/setting/sync', app.flow('SyncStatus'));
+	var dologin = require ('./flows/dologin.js');
+	var dologinModel = dologin.m(configure.get('Login.ID'), configure.get('Login.Password'));
+	express.post('/setting/login/', app.addFlow('DoLogin', dologin.c, dologinModel, login.v));
+	
+//	express.get('/setting/logout/', app.flow('DoLogout'));
+	
+	express.get('/setting/sync/', app.addFlow('SyncStatus', c.requireAuth, m.requireAuth, v.requireAuth('setting/sync')));
 	
 	app.addFlow('Error404', null, null, common.view.error(404,'error404'));
 };

@@ -1,6 +1,6 @@
 extends ../base
 
-block content
+block outer
  .jumbotron
   .row
    .col-md-4.col-md-offset-4
@@ -9,10 +9,12 @@ block content
       h2.panel-title Please sign in
      .panel-body
       form.form-signin(role="form",action="./",method="post")
+       if dologin
+        .alert.alert-danger Faild to sign in.
        .form-group
-         input.form-control(placeholder="Login ID",type="text",value="",required,autofocus)
+         input.form-control(placeholder="ID",type="text",name="ID",value="#{ID}",required,autofocus)
        .form-group
-         input.form-control(placeholder="Password",type="password",value="",required)
+         input.form-control(placeholder="Password",type="password",name="Password",value="",required)
        .form-group
          button.btn.btn-lg.btn-primary.btn-block(type="submit") Sign in
 

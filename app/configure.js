@@ -1,33 +1,31 @@
 var fs = require('fs');
 
-var configure = module.exports = {
-	isLoaded: false,
-	path: '',
-	values : {}
+var Configure = module.exports = function(filePath) {
+	this.filePath = filePath;
+	this.reload();
 };
 
-module.exports.load = function (filePath, next){
-	delete(require.cache[configure.path]);
-	configure.path = filePath;
-	reload (next);
-};
+Configure.prototype.filePath = null;
+Configure.prototype.values = {};
 
-var reload = module.exports.reload = function (next) {
-	if (configure.path) {
-		delete(require.cache[configure.path]);
-		fs.exists (configure.path, function (exists) {
-			if (exists) {
-				configure.values = require (configure.path);
-				configure.isLoaded = true;
-			} else {
-				configure.values = {};
-				configure.isLoaded = false;
-			}
-			next();
-		});
+Configure.prototype.reload = function() {
+	delete (require.cache[this.filePath]);
+	if (fs.existsSync(this.filePath)) {
+		this.values = require (this.filePath);
+	} else {
+		this.values = {};
 	}
 };
 
-module.exports.save = function () {
-	
+module.exports.save = function() {
+
 };
+
+Configure.prototype.get = function (key) {
+	if (key in this.values) {
+		return this.values[key];
+	} else {
+		return;
+	}
+	
+}

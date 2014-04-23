@@ -19,7 +19,7 @@ module.exports.model = {
 module.exports.view = {
 		template: function(template) {
 			return function(response, params) {
-				response.render('index', params);
+				response.render(template, params);
 			};
 		},
 		redirect: function (status, url) {
