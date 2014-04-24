@@ -4,7 +4,9 @@
  */
 var common = require ('./common.js');
 
-module.exports.m = function (input, output, next) {
+module.exports.controller = common.controller.requireAuth;
+
+module.exports.model = function (input, output, next) {
 	common.model.requireAuth(input,output, function () {
 		output.ID = '';
 		output.Password = '';
@@ -12,7 +14,7 @@ module.exports.m = function (input, output, next) {
 	});
 };
 
-module.exports.v = function (res, output, next) {
+module.exports.view = function (res, output, next) {
 	if (output.login) {
 		res.redirect(302, '/setting/sync/');
 	} else {
@@ -20,3 +22,4 @@ module.exports.v = function (res, output, next) {
 	}
 	next();
 };
+

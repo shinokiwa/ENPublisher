@@ -35,10 +35,10 @@ app.prototype.flow = function(flow) {
 	};
 };
 
-app.prototype.addFlow = function(flow, controller, model, view) {
-	controller && this.on('Controller.' + flow, controller);
-	model && this.on('Model.' + flow, model);
-	view && this.on('View.' + flow, view);
+app.prototype.addFlow = function(flow, listeners) {
+	listeners.controller && this.on('Controller.' + flow, listeners.controller);
+	listeners.model && this.on('Model.' + flow, listeners.model);
+	listeners.view && this.on('View.' + flow, listeners.view);
 	return this.flow(flow);
 };
 

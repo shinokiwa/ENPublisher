@@ -97,11 +97,11 @@ describe('App', function() {
 		it('Initialize->Processの順で、イベントを実行する。引数はなし。', function(done) {
 			var app = new App();
 			var check = false;
-			app.on('Initialize', function (next) {
+			app.on('Initialize', function(next) {
 				check = true;
 				next();
 			});
-			app.on('Process', function (next) {
+			app.on('Process', function(next) {
 				check.should.equal(true);
 				done();
 				next();
@@ -116,17 +116,25 @@ describe('App', function() {
 		it('モデルイベントにはInputオブジェクトとOutputオブジェクトが渡される。');
 		it('ビューイベントには実行時の第二引数とOutputオブジェクトが渡される。');
 	});
-	describe('#addFlow()', function() {
-		it('フローにリスナを一括登録する。', function(done) {
+	describe('#addFlow(flow,listeners)', function() {
+		it('フローにリスナを一括登録する。listeners.controller/model/viewがそれぞれバインドされる。', function(done) {
 			var app = new App();
 			var count = 0;
-			var listener = function(inc) {
-				return function(i, o, next) {
-					count += inc;
+			var listeners = {
+				controller : function(i, o, next) {
+					count += 1;
 					next();
-				};
+				},
+				model : function(i, o, next) {
+					count += 2;
+					next();
+				},
+				view : function(i, o, next) {
+					count += 4;
+					next();
+				}
 			};
-			app.addFlow('Index', listener(1), listener(2), listener(4));
+			app.addFlow('Index', listeners);
 			app.on('After.View', function(i, o, next) {
 				count.should.equal(7);
 				next();
@@ -136,69 +144,40 @@ describe('App', function() {
 		});
 		it('戻り値はflow(フロー名)の戻り値となるので、そのまま実行可能。', function(done) {
 			var app = new App();
-			app.addFlow('Index', function(i, o, next) {
-				done();
-				next();
+			app.addFlow('Index', {
+				controller : function(i, o, next) {
+					done();
+					next();
+				}
 			})({}, {});
 		});
 		it('第一引数はフロー名になる。', function(done) {
 			var app = new App();
-			app.addFlow('TestFlow', function(i, o, next) {
-				done();
-				next();
+			app.addFlow('TestFlow', {
+				controller : function(i, o, next) {
+					done();
+					next();
+				}
 			});
 			app.flow('TestFlow')({}, {});
 		});
-		it('第二引数は省略可能。', function(done) {
+		it('listenersのcontroller、model、viewは存在するものだけバインドされる。', function(done) {
 			var app = new App();
-			app.on('View.Index', function(i, o, next) {
-				done();
+			var controller = function(i, o, next) {
 				next();
-			});
-			app.addFlow('Index')({}, {});
-		});
-		it('第二引数はコントローラのリスナを指定。', function(done) {
-			var app = new App();
-			app.addFlow('TestFlow', function() {
+				app.flow('Model')({}, {});
+			};
+			var model = function(i, o, next) {
+				next();
+				app.flow('View')({}, {});
+			};
+			var view = function(i, o, next) {
 				done();
-			});
-			app.emit('Controller.TestFlow');
-		});
-		it('第三引数は省略可能。', function(done) {
-			var app = new App();
-			var n = function(i, o, next) {
 				next();
 			};
-			app.on('After.View', function(i, o, next) {
-				done();
-				next();
-			});
-			app.addFlow('Index', n)({}, {});
-		});
-		it('第三引数はモデルのリスナを指定。', function(done) {
-			var app = new App();
-			app.addFlow('TestFlow', null, function() {
-				done();
-			});
-			app.emit('Model.TestFlow');
-		});
-		it('第四引数は省略可能。', function(done) {
-			var app = new App();
-			var n = function(i, o, next) {
-				next();
-			};
-			app.on('After.View', function(i, o, next) {
-				done();
-				next();
-			});
-			app.addFlow('Index', n, n)({}, {});
-		});
-		it('第四引数はビューのリスナを指定。', function(done) {
-			var app = new App();
-			app.addFlow('TestFlow', null, null, function() {
-				done();
-			});
-			app.emit('View.TestFlow');
+			app.addFlow('View',{view: view});
+			app.addFlow('Model',{model: model});
+			app.addFlow('Controller',{controller: controller})({}, {});
 		});
 	});
 });
