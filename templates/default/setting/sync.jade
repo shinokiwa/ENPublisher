@@ -2,3 +2,25 @@ extends ./outer
 
 block content
  p sync status
+ p
+  a(href="/setting/dosync/") Start sync all notes.
+ dl
+  dt Status
+  dd
+   ul
+    li #{status}
+  dt Queue
+  dd
+   ul
+    each val in queue
+     li #{val.title}(#{val.guid})
+  dt Messages
+  dd
+   ul
+    each val in message
+     li #{val}
+  dt Error
+  dd
+   ul
+    each val in error
+     li val
