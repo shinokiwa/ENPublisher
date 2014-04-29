@@ -1,4 +1,4 @@
-var com = require('../../../app/components/mongooses/postschema.js');
+var com = require('../../../app/components/mongooses/postSchema.js');
 require('should');
 
 describe('components.mongoose.postschema', function() {
