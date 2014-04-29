@@ -6,6 +6,20 @@ var Client = function(client, notebook, published) {
 	this._published = published;
 };
 
+Client.prototype.getSyncState = function (next) {
+	var noteStore = this._client.getNoteStore();
+	noteStore.getSyncState(next);
+};
+
+Client.prototype.getSyncChunk = function (usn, next){
+	var noteStore = this._client.getNoteStore();
+	var filter = new Evernote.SyncChunkFilter();
+	filter.includeNotebooks = false;
+	filter.includeNotes = true;
+	filter.includeTags = true;
+	noteStore.getFilteredSyncChunk(usn, 100, filter, next);
+};
+
 Client.prototype.getMetaAll = function(offset, next) {
 	var noteStore = this._client.getNoteStore();
 	var noteFilter = new Evernote.NoteFilter();
@@ -13,20 +27,7 @@ Client.prototype.getMetaAll = function(offset, next) {
 	var notesMetadataResultSpec = new Evernote.NotesMetadataResultSpec();
 	notesMetadataResultSpec.includeTitle = true;
 	notesMetadataResultSpec.includeUpdateSequenceNum = true;
-	noteStore.findNotesMetadata(noteFilter, offset, 100, notesMetadataResultSpec, function(err, data) {
-		if (err) {
-			console.log(err);
-			next(err, null);
-		} else {
-			var noteList = {
-				startIndex : data.startIndex,
-				totalNotes : data.totalIndex,
-				notes : data.notes,
-				updateCount : data.updateCount
-			};
-			next(null, noteList);
-		}
-	});
+	noteStore.findNotesMetadata(noteFilter, offset, 100, notesMetadataResultSpec, next);
 };
 
 Client.prototype.getNote = function(guid, next) {
@@ -40,7 +41,7 @@ Client.prototype.getNote = function(guid, next) {
 				next(err, null);
 			}
 		} else {
-			if (data.notebookGuid == self._notebook && data.deleted == null) {
+			if (data && data.notebookGuid == self._notebook && data.deleted == null) {
 				var note = {
 					guid : data.guid,
 					title : data.title,

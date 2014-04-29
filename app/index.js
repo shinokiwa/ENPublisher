@@ -6,13 +6,12 @@
 var App = require ('./app.js');
 var Configure = require ('./configure.js');
 var Express = require ('./express.js');
-var path = require('path');
 var flow = require ('./flow.js');
 var component = require ('./component.js');
 
-module.exports.create = function () {
+module.exports.create = function (configurePath) {
 	var app = new App();
-	var configure = new Configure (path.join(__dirname, '../configure.json'));
+	var configure = new Configure (configurePath);
 	var express = Express(app);
 	flow(app, express);
 	component(app, configure);

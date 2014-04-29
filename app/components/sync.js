@@ -12,19 +12,24 @@ var Sync = function(app) {
 	this.queuedNotes = new Array();
 
 	this.doSyncAll = function() {
-		setTimeout(app.flow('BatchSyncAll'), 10*1000);
+		setTimeout(app.flow('BatchSyncAll'), 1000);
 	};
 	this.doSyncNote = function() {
-		setTimeout(app.flow('BatchSyncNote'), 10*1000);
+		setTimeout(app.flow('BatchSyncNote'), 1000);
 	};
 	this.doSyncChunk = function() {
-		setTimeout(app.flow('BatchSyncChunk'), 10*1000);
+		setTimeout(app.flow('BatchSyncChunk'), 60*1000);
 	};
 };
 
 Sync.prototype.updateLastSyncAllTime = function() {
 	var now = new Date();
 	this.lastSyncAllTime = now;
+	this.lastSyncTime = now;
+};
+
+Sync.prototype.updateLastSyncTime = function() {
+	var now = new Date();
 	this.lastSyncTime = now;
 };
 

@@ -19,9 +19,9 @@ var PostSchema = module.exports = new Schema({
 	updated : Date,
 	deleted : Date,
 	published : Date,
-	isPublished: Boolean,
+	view: Boolean,
 	updateSequenceNum : Number,
-	tags : [],
+	tags : String,
 }, {
-	_id : true
+	_id: false
 });

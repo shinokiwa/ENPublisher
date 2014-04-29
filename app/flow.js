@@ -19,6 +19,8 @@ module.exports = function (app, express) {
 	express.get('/setting/dosync/', app.addFlow('DoSync', require ('./flows/dosync.js')));
 	
 	app.addFlow('BatchSyncAll', require ('./flows/batchsyncall.js'));
+	app.addFlow('BatchSyncNote', require ('./flows/batchsyncnote.js'));
+	app.addFlow('BatchSyncChunk', require ('./flows/batchsyncchunk.js'));
 
 	app.addFlow('Error404', {view:common.view.error(404,'error404')});
 };

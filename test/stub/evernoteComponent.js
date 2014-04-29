@@ -1,124 +1,129 @@
+var EventEmitter = require('events').EventEmitter;
+var util = require("util");
+var EvernoteData = require('./evernoteData');
+
 var stub = module.exports = function() {
-	this.list = [ {
-		guid : 'test-guid-01',
-		title : 'Test Title 01!'
-	} ];
+	EventEmitter.call(this);
+	this.list = new Array();
+	this.list.push(new EvernoteData.MetaData('test-guid-1', 'Test Title 1'));
 
-	var testNote = new Note('TEST-NOTE');
-	var deletedNote = new Note('DELETED-NOTE');
-	deletedNote.deleted = deletedNote.created;
-	var otherNotebook = new Note('OTHER-NOTEBOOK');
-	otherNotebook.notebookGuid = 'OTHER-NOTEBOOK-GUID';
+	this.notes = {};
 
-	this.notes = {
-		'TEST-NOTE' : testNote,
-		'DELETED-NOTE' : deletedNote,
-		'OTHER-NOTEBOOK' : otherNotebook
-	};
+	this.notes['TEST-NOTE'] = new EvernoteData.Note('TEST-NOTE');
+	this.notes['DELETED-NOTE'] = new EvernoteData.Note('DELETED-NOTE');
+	this.notes['DELETED-NOTE'] = this.notes['DELETED-NOTE'].created;
+	this.notes['OTHER-NOTEBOOK'] = new EvernoteData.Note('OTHER-NOTEBOOK');
+	this.notes['OTHER-NOTEBOOK'].notebookGuid = 'OTHER-NOTEBOOK-GUID';
 };
+
+util.inherits(stub, EventEmitter);
 
 stub.prototype.setNotesCount = function(count) {
 	var list = new Array();
 	for (var i = 0; i < count; i++) {
-		list.push(this.list[0]);
+		list.push(new EvernoteData.MetaData('test-guid-'+list.length, 'Test Title '+list.length));
 	}
 	this.list = list;
 };
 
-stub.prototype.preGetMetaAll = function(offset, next) {
-	next();
+stub.prototype.getSyncState = function(next) {
+	this.once('getSyncState', function(input, output) {
+		input.next(output.err, output.status);
+	});
+	var input = {
+		next : next
+	};
+	var output = {
+		err : null,
+		status : {
+			currentTime : new Date(),
+			fullSyncBefore : new Date(),
+			updateCount : 46,
+			uploaded : null
+		}
+	};
+	this.emit('getSyncState', input, output);
 };
 
 stub.prototype.getMetaAll = function(offset, next) {
-	var list = {
+	this.once('getMetaAll', function(input, output) {
+		input.next(output.err, output.data);
+	});
+	var input = {
+		offset : offset,
+		next : next
+	};
+	var output = {
+		err : null
+	};
+	output.list = {
 		startIndex : offset,
 		totalNotes : 0,
 		updateCount : 46,
 		notes : new Array()
 	};
-	list.totalNotes = this.list.length;
+	output.list.totalNotes = this.list.length;
 	var i = offset;
 	while (i < this.list.length) {
 		if (i >= offset + 100)
 			break;
-		list.notes.push(this.list[i]);
+		output.list.notes.push(this.list[i]);
 		i++;
 	}
-	this.preGetMetaAll(offset, function() {
-		next(null, list);
-	});
+	this.emit('getMetaAll', input, output);
 };
 
-stub.prototype.preGetNote = function(guid, next) {
-	next();
+stub.prototype.getSyncChunk = function(usn, next) {
+	this.once('getSyncChunk', function(input, output) {
+		input.next(output.err, output.list);
+	});
+	var input = {
+		usn : usn,
+		next : next
+	};
+	var output = {
+		err : null
+	};
+	output.list = {
+		currentTime : 1398359259647,
+		chunkHighUSN : 46,
+		updateCount : 46,
+		notes : new Array(),
+		notebooks: new Array(),
+		tags: new Array(),
+		searches: null,
+		resources: null,
+		expungedNotes: null,
+		expungedNotebooks: null,
+		expungedTags: null,
+		expungedSearches: null,
+		linkedNotebooks: null,
+		expungedLinkedNotebooks: null
+	};
+	var i = 0;
+	while (i < this.list.length) {
+		if (i >= 100)
+			break;
+		output.list.notes.push(this.list[i]);
+		i++;
+	}
+	this.emit('getSyncChunk', input, output);
 };
 
 stub.prototype.getNote = function(guid, next) {
-	var self = this;
-	this.preGetNote(guid, function(err) {
-		if (err) {
-			next(err, null);
-		} else {
-			var note = null;
-			if (guid in self.notes) {
-				note = self.notes[guid];
-			}
-			next(null, note);
-		}
+	this.once('getNote', function(input, output) {
+		input.next(output.err, output.data);
 	});
-};
-
-var Note = function(guid) {
-	this.guid = guid;
-};
-
-Note.prototype = {
-	guid : null,
-	title : 'testNote!',
-	content : '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">\n<en-note><div>これがてすとです。</div><div><br clear="none"/></div><div><br clear="none"/><en-media hash="42237621d7a569c19acc67f04a2db2d8" type="image/png"></en-media></div></en-note>',
-	contentHash : {},
-	contentLength : 280,
-	created : 1391939596000,
-	updated : 1392119875000,
-	deleted : null,
-	active : true,
-	updateSequenceNum : 30,
-	notebookGuid : 'COLLECT-NOTEBOOK',
-	tagGuids : [ 'TAG-GUID', 'PUBLISH-GUID' ],
-	resources : [ {
-		guid : '',
-		noteGuid : '',
-		data : {},
-		mime : 'image/png',
-		width : 842,
-		height : 579,
-		duration : null,
-		active : true,
-		recognition : null,
-		attributes : null,
-		updateSequenceNum : 32,
-		alternateData : null
-	} ],
-	attributes : {
-		subjectDate : null,
-		latitude : null,
-		longitude : null,
-		altitude : null,
-		author : 'test-user',
-		source : null,
-		sourceURL : null,
-		sourceApplication : null,
-		shareDate : null,
-		reminderOrder : null,
-		reminderDoneTime : null,
-		reminderTime : null,
-		placeName : null,
-		contentClass : null,
-		applicationData : null,
-		lastEditedBy : null,
-		classifications : null,
-		creatorId : null,
-		lastEditorId : null
-	},
-	tagNames : null
+	var input = {
+		guid : guid,
+		next : next
+	};
+	var output = {
+		err : null
+	};
+	output.data = null;
+	if (guid in self.notes) {
+		note = this.notes[guid];
+	}
+	this.emit('getNote', input, output);
 };

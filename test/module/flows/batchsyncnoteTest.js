@@ -37,8 +37,8 @@ describe('flows.batchsyncnote', function() {
 			clear();
 			sync.queue([{guid:'NOTHING-NOTE', title:'testNote!'}]);
 			var check1 = false;
-			post.preRemove = function (guid, next) {
-				guid.should.eql('NOTHING-NOTE');
+			post.preRemove = function (conditions, next) {
+				conditions.should.have.property('guid', 'NOTHING-NOTE');
 				check1 = true;
 				next();
 			};

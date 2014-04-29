@@ -7,18 +7,22 @@ module.exports.model = function(input, output, next) {
 		var evernote = input.components.evernote();
 		var post = input.components.post();
 		var queue = null;
-		var process = function () {
+		var process = function() {
 			sync.updateStatus('NOTE');
 			queue = sync.queuedNotes.shift();
 			if (queue) {
-				evernote.getNote(queue.guid, function (err, note) {
+				evernote.getNote(queue.guid, function(err, note) {
 					if (err) {
 						processed(err);
 					} else {
 						if (note) {
 							post.save(note, processed);
 						} else {
-							post.remove(queue.guid, processed);
+							post.remove({
+								guid : queue.guid
+							}, function (err) {
+								processed(err);
+							});
 						}
 					}
 				});
@@ -26,14 +30,14 @@ module.exports.model = function(input, output, next) {
 				processed(null);
 			}
 		};
-		var processed = function (err, note) {
+		var processed = function(err, note) {
 			if (err) {
-				sync.error.push('SyncNote: {guid: '+queue.guid + ' , title: '+queue.title+' } '+ err.message);
+				sync.error.push('SyncNote: {guid: ' + queue.guid + ' , title: ' + queue.title + ' } ' + err.message);
 			}
 			if (sync.queuedNotes.length) {
-				setTimeout(function () {
+				setTimeout(function() {
 					process();
-				}, 10*1000);
+				}, 1000);
 			} else {
 				sync.updateStatus(null);
 				sync.doSyncChunk();

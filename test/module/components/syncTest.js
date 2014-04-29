@@ -15,6 +15,12 @@ describe('components.sync', function() {
 			sync.status.should.have.property('now');
 			sync.status.should.have.property('string');
 		});
+		it('Syncコンポーネントには同期プロセスの状態が保持される。', function () {
+			var sync = comSync();
+			sync.should.have.property('status');
+			sync.status.should.have.property('now');
+			sync.status.should.have.property('string');
+		});
 		it('Syncコンポーネントは別々の変数に代入しても同一の参照となる。', function () {
 			var sync = com(app)();
 			var sync2 = com(app)();
@@ -26,9 +32,9 @@ describe('components.sync', function() {
 			sync.USN = null;
 		});
 	});
-	describe('#doSyncAll()', function () {
-		it('10秒タイムアウト後、BatchSyncAllフローを実行する。', function (done) {
-			this.timeout(15 * 1000);
+	describe.skip('#doSyncAll()', function () {
+		it('1秒タイムアウト後、BatchSyncAllフローを実行する。', function (done) {
+			this.timeout(3 * 1000);
 			var sync = comSync();
 			var check1 = '';
 			var check2 = '';
@@ -45,13 +51,13 @@ describe('components.sync', function() {
 					check2.should.be.ok;
 					done();
 				}, 2*1000);
-			}, 9*1000);
+			}, 0);
 			sync.doSyncAll();
 		});
 	});
-	describe('#doSyncNote()', function () {
-		it('10秒タイムアウト後、BatchSyncNoteフローを実行する。', function (done) {
-			this.timeout(15 * 1000);
+	describe.skip('#doSyncNote()', function () {
+		it('1秒タイムアウト後、BatchSyncNoteフローを実行する。', function (done) {
+			this.timeout(3 * 1000);
 			var sync = comSync();
 			var check1 = '';
 			var check2 = '';
@@ -68,13 +74,13 @@ describe('components.sync', function() {
 					check2.should.be.ok;
 					done();
 				}, 2*1000);
-			}, 9*1000);
+			}, 0);
 			sync.doSyncNote();
 		});
 	});
-	describe('#doSyncChunk()', function () {
-		it('10秒タイムアウト後、BatchSyncChunkフローを実行する。', function (done) {
-			this.timeout(15 * 1000);
+	describe.skip('#doSyncChunk()', function () {
+		it('1分タイムアウト後、BatchSyncChunkフローを実行する。', function (done) {
+			this.timeout(65 * 1000);
 			var sync = comSync();
 			var check1 = '';
 			var check2 = '';
@@ -91,7 +97,7 @@ describe('components.sync', function() {
 					check2.should.be.ok;
 					done();
 				}, 2*1000);
-			}, 9*1000);
+			}, 59*1000);
 			sync.doSyncChunk();
 		});
 	});
@@ -150,6 +156,20 @@ describe('components.sync', function() {
 			sync.lastSyncAllTime = null;
 		});
 	});
+	describe('#updateLastSyncTime()', function () {
+		it('lastSyncTimeを現在時刻で更新する。lastSyncAllTimeは変化しない。', function () {
+			// このテストは時刻を使用するため、実行タイミングによっては稀にNGになる事がある。
+			var sync = comSync ();
+			sync.should.have.property('lastSyncTime', null);
+			sync.should.have.property('lastSyncAllTime', null);
+			var now = new Date();
+			sync.updateLastSyncTime();
+			sync.should.have.property('lastSyncTime', now);
+			sync.should.have.property('lastSyncAllTime', null );
+			sync.lastSyncTime = null;
+			sync.lastSyncAllTime = null;
+		});
+	});
 	describe('#updateStatus(status)', function () {
 		it('status.nowおよびstatus.stringを更新する。NULLを渡された場合はnow:null、string:WAITになる。', function (done) {
 			var sync = comSync();
@@ -164,5 +184,6 @@ describe('components.sync', function() {
 			sync.status.should.have.property('string', 'WAIT');
 			done();
 		});
+		it('15分間updateStatusの呼び出しがなかった場合、string:nullに戻る。');
 	});
 });

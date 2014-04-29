@@ -111,6 +111,17 @@ describe('flows.batchsyncall', function() {
 				done();
 			});
 		});
+		it('同期しなかった場合はSyncコンポーネントのdoSyncChunkを実行する。', function (done) {
+			clear();
+			var check = false;
+			input.components._sync.doSyncChunk = function () {
+				check = true;
+			};
+			flow.model(input, output, function () {
+				check.should.be.ok;
+				done();
+			});
+		});
 		it('前回実行時(lastSyncAllTime)から15分以内の場合はSyncコンポーネントにメッセージを残し、同期しない。', function (done) {
 			clear();
 			sync.lastSyncAllTime = new Date((new Date()) - 15 * 60 * 1000 + 1000);

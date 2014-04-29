@@ -17,6 +17,11 @@ stub.prototype.updateLastSyncAllTime = function() {
 	this.lastSyncAllTime = now;
 };
 
+stub.prototype.updateLastSyncTime = function() {
+	var now = new Date();
+	this.lastSyncTime = now;
+};
+
 stub.prototype.queue = function(list) {
 	for ( var i in list) {
 		this.queuedNotes.push(list[i]);
