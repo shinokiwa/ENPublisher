@@ -18,19 +18,22 @@ module.exports.model = {
 
 module.exports.view = {
 		template: function(template) {
-			return function(response, params) {
+			return function(response, params, next) {
 				response.render(template, params);
+				next&&next();
 			};
 		},
 		redirect: function (status, url) {
-			return function (response,params) {
+			return function (response,params, next) {
 				response.redirect(status, url);
+				next&&next();
 			};
 		},
 		error: function(errCode) {
-			return function(response, params) {
+			return function(response, params, next) {
 				response.status(errCode);
 				response.render('error'+errCode.toString(), params);
+				next&&next();
 			};
 		},
 		requireAuth: function (template) {

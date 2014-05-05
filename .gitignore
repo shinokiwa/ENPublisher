@@ -27,3 +27,5 @@ node_modules
 .settings
 .project
 configure.json
+resources/*
+!resources/.gitkeep

@@ -7,11 +7,33 @@ var clear = function() {
 };
 var checker = mongoose();
 var Post = checker.model('Post');
-describe('components.post', function() {
+describe('Components.Post', function() {
 	describe('#create', function() {
 		it('Postコンポーネントの実体を取得する。', function() {
 			clear();
 			com.should.be.type('object');
+		});
+	});
+	describe('#find(conditions, fields, option, next)', function() {
+		it('PostSchemaのfindメソッドを実行する。', function(done) {
+			var check = false;
+			var note2 = new Post({
+				guid : 'TEST-GUID2',
+				url: 'abc'
+			});
+			checker.once('Post.Find', function(input, output) {
+				input.should.have.property('conditions', null);
+				input.should.have.property('fields', null);
+				input.should.have.property('options', null);
+				output.data = [note2];
+				check = true;
+			});
+			com.find(null, null, null, function(err, data) {
+				check.should.be.ok;
+				(err == null).should.be.ok;
+				data.should.length(1);
+				done();
+			});
 		});
 	});
 	describe('#getMetaAll(data, next)', function() {

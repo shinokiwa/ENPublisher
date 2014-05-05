@@ -4,6 +4,7 @@ module.exports = function (app, router) {
 	
 	var index = require ('./flows/index.js');
 	router.get('/', app.addFlow('Index', index));
+	router.get('/post/:url', app.addFlow('Post', require ('./flows/post.js')));
 
 	router.get('/setting/', app.addFlow('Setting', {view: v.redirect(302,'/setting/login/')}));
 

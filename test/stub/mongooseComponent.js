@@ -20,7 +20,7 @@ var Post = function (data) {
 };
 
 Post.prototype.save = function (next) {
-	mongoose.once('Post.Save', function (input, output) {
+	mongoose.once('Post.prototype.save', function (input, output) {
 		input.next (output.err);
 	});
 	var input = {
@@ -30,11 +30,11 @@ Post.prototype.save = function (next) {
 	var output = {
 			err: null
 	};
-	mongoose.emit('Post.Save', input, output);
+	mongoose.emit('Post.prototype.save', input, output);
 };
 
 Post.find = function (conditions, fields, options, callback) {
-	mongoose.once('Post.Find', function (input, output) {
+	mongoose.once('Post.find', function (input, output) {
 		if (typeof input.fields == 'function') input.fields(output.err, output.data);
 		else if (typeof input.options == 'function') input.options (output.err, output.data);
 		else if (typeof input.callback == 'function') input.callback (output.err, output.data);
@@ -49,11 +49,11 @@ Post.find = function (conditions, fields, options, callback) {
 			err: null,
 			data: null,
 	};
-	mongoose.emit('Post.Find', input, output);
+	mongoose.emit('Post.find', input, output);
 };
 
 Post.findOne = function (conditions, fields, options, callback) {
-	mongoose.once('Post.FindOne', function (input, output) {
+	mongoose.once('Post.findOne', function (input, output) {
 		if (typeof input.fields == 'function') input.fields(output.err, output.data);
 		else if (typeof input.options == 'function') input.options (output.err, output.data);
 		else if (typeof input.callback == 'function') input.callback (output.err, output.data);
@@ -68,11 +68,11 @@ Post.findOne = function (conditions, fields, options, callback) {
 			err: null,
 			data: null,
 	};
-	mongoose.emit('Post.FindOne', input, output);
+	mongoose.emit('Post.findOne', input, output);
 };
 
 Post.findOneAndUpdate = function (conditions, update, options, callback) {
-	mongoose.once('Post.FindOneAndUpdate', function (input, output) {
+	mongoose.once('Post.findOneAndUpdate', function (input, output) {
 		input.callback(output.err);
 	});
 	var input = {
@@ -84,11 +84,11 @@ Post.findOneAndUpdate = function (conditions, update, options, callback) {
 	var output = {
 			err: null
 	};
-	mongoose.emit('Post.FindOneAndUpdate', input, output);
+	mongoose.emit('Post.findOneAndUpdate', input, output);
 };
 
 Post.remove = function (conditions, callback) {
-	mongoose.once('Post.Remove', function (input, output) {
+	mongoose.once('Post.remove', function (input, output) {
 		input.callback(output.err);
 	});
 	var input = {
@@ -98,9 +98,31 @@ Post.remove = function (conditions, callback) {
 	var output = {
 			err: null
 	};
-	mongoose.emit('Post.Remove', input, output);
+	mongoose.emit('Post.remove', input, output);
 };
 
+Post.count = function (conditions, fields, options, callback) {
+	mongoose.once('Post.count', function (input, output) {
+		if (typeof input.fields == 'function') input.fields(output.err, output.data);
+		else if (typeof input.options == 'function') input.options (output.err, output.data);
+		else if (typeof input.callback == 'function') input.callback (output.err, output.data);
+	});
+	var input = {
+			conditions: conditions,
+			fields: fields,
+			options: options,
+			callback: callback
+	};
+	var output = {
+			err: null,
+			data: null,
+	};
+	mongoose.emit('Post.count', input, output);
+};
+
+Post.prototype.toObject = function () {
+	return this;
+};
 
 var models = {
 	Post: Post

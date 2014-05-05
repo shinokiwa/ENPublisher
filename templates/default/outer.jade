@@ -9,11 +9,14 @@ block outer
      span.icon-bar
      span.icon-bar
      span.icon-bar
-    a.navbar-brand(href="#") Project name
+    a.navbar-brand(href="/")=site.Title
    .collapse.navbar-collapse
     ul.nav.navbar-nav
      li.active
-      a(href="#") Home
+      a(href="/") Home
 
  .container
   block content
+
+ style.
+  body { padding-top: 50px;}

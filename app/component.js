@@ -18,8 +18,11 @@ module.exports = function (app, configure, next) {
 		input.components.session = require ('./components/session.js')(request);
 		
 		input.components.login = require ('./components/login.js')(configure.get('Login.ID'), configure.get('Login.Password'));
+		input.components.site = require ('./components/site.js')(configure.get('Site'));
 
 		input.components.sync = require ('./components/sync.js')(app);
+
+		input.components.database = mongoose;
 
 		var Evernote = require('evernote');
 		var token = configure.get('Evernote.Token');
@@ -31,4 +34,10 @@ module.exports = function (app, configure, next) {
 		
 		next&&next();
 	});
+	app.on('After.Model', function (input, output, next) {
+		var site = input.components.site();
+		output.site = site;
+		next();
+	});
+
 };

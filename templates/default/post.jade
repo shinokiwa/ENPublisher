@@ -1,0 +1,8 @@
+extends ./outer
+
+block content
+ .content
+  a(href="/post/#{post.url}")
+   h2=post.title
+  article!=post.contentHTML
+  aside created: #{post.created.getFullYear()}-#{post.created.getMonth()+1}-#{post.created.getDay()+1}

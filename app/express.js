@@ -4,7 +4,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-var morgan  = require('morgan');
+var morgan = require('morgan');
 
 module.exports = function(app) {
 	var ex = express();
@@ -12,12 +12,19 @@ module.exports = function(app) {
 	ex.set('port', 8000);
 	ex.set('views', path.join(__dirname, '../templates/default'));
 	ex.set('view engine', 'jade');
-	ex.use(morgan());
 	ex.use(bodyParser());
 	ex.use(cookieParser());
-	ex.use(session({ secret: 'enpublisher session', key: 'sid', cookie: { secure: false }}));
+	ex.use(session({
+		secret : 'enpublisher session',
+		key : 'sid',
+		cookie : {
+			secure : false
+		}
+	}));
+	ex.use('/assets', express.static(path.join(__dirname, '../templates/default/assets/')));
+	ex.use('/resources', express.static(path.join(__dirname, '../resources/')));
+	ex.use(morgan());
 	ex.use(router);
-	ex.use(express.static(path.join(__dirname, '../templates/default/assets/')));
 	ex.use(app.flow('Error404'));
 
 	app.on('Process', function(next) {

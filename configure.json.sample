@@ -1,0 +1,16 @@
+{
+	"Site": {
+		"Title": "ENPublisher!"
+	},
+
+	"Login.ID": "admin",
+	"Login.Password": "password",
+	
+	"Evernote.Token": "",
+	"Evernote.NotebookGUID": "",
+	"Evernote.PublishedGUID": "",
+	
+	"Mongoose.Host": "localhost",
+	"Mongoose.Database": "enpublisher",
+	"Mongoose.Port": "27017"
+}
