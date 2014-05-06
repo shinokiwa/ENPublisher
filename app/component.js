@@ -28,7 +28,8 @@ module.exports = function (app, configure, next) {
 		var token = configure.get('Evernote.Token');
 		var notebook = configure.get('Evernote.NotebookGUID');
 		var tag = configure.get('Evernote.PublishedGUID');
-		input.components.evernote = require ('./components/evernote.js')(Evernote, token, notebook, tag);
+		var sandbox = configure.get('Evernote.Sandbox');
+		input.components.evernote = require ('./components/evernote.js')(Evernote, token, notebook, tag, sandbox);
 
 		input.components.post = require ('./components/post.js')(mongoose, tag);
 		

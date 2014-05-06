@@ -61,10 +61,11 @@ Client.prototype.getNote = function(guid, next) {
 	});
 };
 
-module.exports = function(EvernoteModule, token, notebookGUID, publishedGUID) {
+module.exports = function(EvernoteModule, token, notebookGUID, publishedGUID, sandbox) {
 	Evernote = EvernoteModule.Evernote;
 	var evernoteClient = new Evernote.Client({
-		token : token
+		token : token,
+		sandbox: sandbox
 	});
 	var client = new Client(evernoteClient, notebookGUID, publishedGUID);
 	return function() {

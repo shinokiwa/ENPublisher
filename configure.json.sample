@@ -9,6 +9,7 @@
 	"Evernote.Token": "",
 	"Evernote.NotebookGUID": "",
 	"Evernote.PublishedGUID": "",
+	"Evernote.Sanbox": true,
 	
 	"Mongoose.Host": "localhost",
 	"Mongoose.Database": "enpublisher",

@@ -9,7 +9,7 @@ var morgan = require('morgan');
 module.exports = function(app) {
 	var ex = express();
 	var router = express.Router();
-	ex.set('port', 8000);
+	ex.set('port', 80);
 	ex.set('views', path.join(__dirname, '../templates/default'));
 	ex.set('view engine', 'jade');
 	ex.use(bodyParser());

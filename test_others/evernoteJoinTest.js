@@ -4,7 +4,7 @@ var app = ENPublisher.create (__dirname+ '/../configure.json');
 
 app.on('Model.EvernoteTest', function (input, output, next) {
 	var evernote = input.components.evernote();
-	evernote.getNote ('f78e27a0-a04b-428f-8298-7486ec753123', function (err, data) {
+	evernote.getMetaAll (0, function (err, data) {
 		console.log ('err:', err);
 		console.log ('data:', data);
 		next();
