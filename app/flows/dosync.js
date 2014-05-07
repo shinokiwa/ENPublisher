@@ -8,4 +8,4 @@ module.exports.model = function(input, output, next) {
 		next();
 	});
 };
-module.exports.view = common.view.redirect(302, 'setting/sync/');
+module.exports.view = common.view.redirect(302, '/setting/sync/');

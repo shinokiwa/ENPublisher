@@ -1,4 +1,5 @@
 module.exports.model = function(input, output, next) {
+	console.log ('BatchSyncNote');
 	var sync = input.components.sync();
 	if (sync.status.now) {
 		sync.message.push('SyncNote: Another process is running.');

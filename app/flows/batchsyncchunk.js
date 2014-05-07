@@ -9,16 +9,25 @@ module.exports.model = function(input, output, next) {
 		var evernote = input.components.evernote();
 		sync.updateStatus('CHUNK');
 		evernote.getSyncState(function(err, state) {
-			if (state.updateCount > sync.USN) {
+			if (err || state.updateCount > sync.USN) {
+				console.log ('BatchSyncChunk');
 				evernote.getSyncChunk(sync.USN, function(err, chunk) {
-					sync.queue(chunk.notes);
-					sync.updateStatus(null);
-					sync.USN = chunk.updateCount;
-					sync.updateLastSyncTime();
-					sync.doSyncNote();
-					next();
+					if (err || !chunk) {
+						sync.queue(chunk.notes);
+						sync.updateStatus(null);
+						sync.USN = chunk.updateCount;
+						sync.updateLastSyncTime();
+						sync.doSyncNote();
+						next();
+					} else {
+						if (err) console.log (err);
+						sync.updateStatus(null);
+						sync.doSyncChunk();
+						next();
+					}
 				});
 			} else {
+				if (err) console.log (err);
 				sync.updateStatus(null);
 				sync.doSyncChunk();
 				next();

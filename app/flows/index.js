@@ -4,18 +4,28 @@
 var common = require('./common.js');
 
 module.exports.controller = function(request, input, next) {
-	input.page = 0;
+	if (request.query.page) {
+		input.page = request.query.page;
+	} else {
+		input.page = 0;
+	}
 	next();
 };
 
 module.exports.model = function(input, output, next) {
 	var db = input.components.database();
 	var Post = db.model('Post');
+	var postCom = input.components.post();
 	var conditions = {
-		view : true
+		tags : {
+			$elemMatch : {
+				guid : postCom._published
+			}
+		}
 	};
 	var posts = {
-		startIndex : 0
+		page: input.page,
+		startIndex : input.page*20
 	};
 	Post.count(conditions, function(err, count) {
 		if (err) {
@@ -24,7 +34,10 @@ module.exports.model = function(input, output, next) {
 			posts.totalPosts = count;
 			Post.find(conditions, null, {
 				limit : 20,
-				skip : 0
+				skip : input.page*20,
+				sort : {
+					created : -1
+				}
 			}, function(err, data) {
 				posts.posts = data;
 				output.posts = posts;

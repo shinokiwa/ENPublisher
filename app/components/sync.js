@@ -45,10 +45,11 @@ Sync.prototype.updateStatus = function (status) {
 		this.status.now = true;
 		this.status.string = status;
 	}
+	var self = this;
 	this.status.timer = setTimeout(function () {
-		this.status.now = false;
-		this.status.string = null;
-	}, 15 * 60 * 1000);
+		self.status.now = false;
+		self.status.string = null;
+	}, 30 * 60 * 1000);
 };
 
 Sync.prototype.queue = function(noteList) {

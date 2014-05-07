@@ -1,4 +1,5 @@
 module.exports.model = function (input, output, next) {
+	console.log ('BatchSyncAll');
 	var sync = input.components.sync();
 	var now = new Date();
 	if (now - sync.lastSyncAllTime < 15 * 60 * 1000) {
@@ -16,15 +17,20 @@ module.exports.model = function (input, output, next) {
 			var offset = sync.queuedNotes.length;
 			
 			evernote.getMetaAll(offset, function (err, list) {
-				sync.queue(list.notes);
-				if (list.startIndex + list.notes.length < list.totalNotes) {
-					setTimeout(function (){
-						noteSync();
-						}, 0);
-				} else {
-					sync.USN = list.updateCount;
-					sync.updateLastSyncAllTime();
+				if (err || !list) {
+					console.log (err);
 					postSync();
+				} else {
+					sync.queue(list.notes);
+					if (list.startIndex + list.notes.length < list.totalNotes) {
+						setTimeout(function (){
+							noteSync();
+							}, 0);
+					} else {
+						sync.USN = list.updateCount;
+						sync.updateLastSyncAllTime();
+						postSync();
+					}
 				}
 			});
 		};

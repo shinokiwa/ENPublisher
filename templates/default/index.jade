@@ -7,7 +7,7 @@ block content
     h2=post.title
    article!=post.contentHTML
    aside created: #{post.created.getFullYear()}-#{post.created.getMonth()+1}-#{post.created.getDay()+1}
-  if posts.startIndex > 0
-   a(href="#") Previous
-  if posts.startIndex+posts.posts.length < posts.totalNotes
-   a(href="#") Next
+  if posts.page > 0
+   a(href="./?page=#{posts.page-1}") Previous
+  if posts.startIndex+posts.posts.length < posts.totalPosts
+   a(href="./?page=#{posts.page+1}") Next
