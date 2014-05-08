@@ -41,7 +41,15 @@ module.exports.model = function(input, output, next) {
 			}, function(err, data) {
 				posts.posts = data;
 				output.posts = posts;
-				next();
+				Post.find(conditions, {title: 1, url: 1}, {
+					limit : 20,
+					sort : {
+						created : -1
+					}
+				}, function(err, data) {
+					output.recentPosts = data;
+					next();
+				});
 			});
 		}
 	});

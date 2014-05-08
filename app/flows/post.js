@@ -17,15 +17,35 @@ module.exports.model = function(input, output, next) {
 	if (input.valid) {
 		var db = input.components.database();
 		var Post = db.model('Post');
+		var postCom = input.components.post();
 		var conditions = {
 			url : input.url,
-			view : true
+			tags : {
+				$elemMatch : {
+					guid : postCom._published
+				}
+			}
 		};
 		Post.findOne(conditions, null, null, function(err, data) {
 			if (data) {
 				output.post = data;
 			}
-			next();
+			var conditions = {
+					tags : {
+						$elemMatch : {
+							guid : postCom._published
+						}
+					}
+				};
+			Post.find(conditions, {title: 1, url: 1}, {
+				limit : 20,
+				sort : {
+					created : -1
+				}
+			}, function(err, data) {
+				output.recentPosts = data;
+				next();
+			});
 		});
 	} else {
 		next();

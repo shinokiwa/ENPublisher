@@ -1,13 +1,24 @@
 extends ./outer
 
 block content
- .content
   each post in posts.posts
-   a(href="/post/#{post.url}")
-    h2=post.title
-   article!=post.contentHTML
-   aside created: #{post.created.getFullYear()}-#{post.created.getMonth()+1}-#{post.created.getDay()+1}
-  if posts.page > 0
-   a(href="./?page=#{posts.page-1}") Previous
-  if posts.startIndex+posts.posts.length < posts.totalPosts
-   a(href="./?page=#{posts.page+1}") Next
+   article
+    a(href="/post/#{post.url}")
+     h2.post-title=post.title
+    aside
+     p created: #{post.created.getFullYear()}/#{post.created.getMonth()+1}/#{post.created.getDay()+1}
+    p!=post.contentHTML
+    hr
+  ul.pager
+   if posts.page > 0
+    li.previous
+     a(href="./?page=#{posts.page-1}") &lt;&lt; Newer
+   else
+    li.previous.disabled
+     a(href="#") &lt;&lt; Newer
+   if posts.startIndex+posts.posts.length < posts.totalPosts
+    li.next
+     a(href="./?page=#{posts.page+1}") Older &gt;&gt;
+   else
+    li.next.disabled
+     a(href="#") Older &gt;&gt;	
