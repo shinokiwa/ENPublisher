@@ -12,7 +12,7 @@ describe('components.mongoose.postschema', function() {
 			var post = new Post();
 			post.should.be.type('object');
 		});
-		it('Postスキーマのインスタンスはguid、title、url、content、created、updated、published、viewをプロパティに持つ。初期値は全てnull。', function() {
+		it('Postスキーマのインスタンスはguid、title、url、content、created、updated、publishedをプロパティに持つ。初期値は全てnull。', function() {
 			var post = new Post();
 			post.should.have.property('guid', null);
 			post.should.have.property('title', null);
@@ -21,7 +21,6 @@ describe('components.mongoose.postschema', function() {
 			post.should.have.property('created', null);
 			post.should.have.property('updated', null);
 			post.should.have.property('published', null);
-			post.should.have.property('view', null);
 		});
 		it('_idは持たない。', function() {
 			var post = new Post();
@@ -53,17 +52,17 @@ describe('components.mongoose.postschema', function() {
 		});
 		it('en-mediaはtype属性に従って置き換えられる。type属性自体は除去される。', function() {
 			post.content = contentBase.replace('__CONTENT__', '<div><br clear="none"/><en-media hash="test-hash" type="image/png"></en-media></div>');
-			var contentHTML = '<div><br clear="none"/><img src="/files/TEST-GUID/test-hash.png"/></div>';
+			var contentHTML = '<div><br clear="none"/><img src="/resources/TEST-GUID/test-hash.png"/></div>';
 			post.contentHTML.should.eql(contentHTML);
 		});
 		it('type=image/png、image/jpg、image/jpeg、image/gifはimgに置き換えられる。files/[noteGUID]/のパス、mimeの/以降が拡張子としてsrcに付与される。', function() {
 			post.content = contentBase.replace('__CONTENT__', '<div><br clear="none"/><en-media hash="test-hash" type="image/png"></en-media></div>');
-			var contentHTML = '<div><br clear="none"/><img src="/files/TEST-GUID/test-hash.png"/></div>';
+			var contentHTML = '<div><br clear="none"/><img src="/resources/TEST-GUID/test-hash.png"/></div>';
 			post.contentHTML.should.eql(contentHTML);
 		});
 		it('それ以外のtypeはaに置き換えられる。files/[noteGUID]/のパス、mimeの/以降が拡張子としてhrefに付与される。', function() {
 			post.content = contentBase.replace('__CONTENT__', '<div><br clear="none"/><en-media hash="test-hash" type="application/pdf"></en-media></div>');
-			var contentHTML = '<div><br clear="none"/><a href="/files/TEST-GUID/test-hash.pdf"/></div>';
+			var contentHTML = '<div><br clear="none"/><a href="/resources/TEST-GUID/test-hash.pdf"/></div>';
 			post.contentHTML.should.eql(contentHTML);
 		});
 		it('en-cryptは除去される。その際、空になったdivがあれば除去される。', function() {
@@ -80,5 +79,19 @@ describe('components.mongoose.postschema', function() {
 		it('aのリンク先が外部サイトの場合、target="_blank"が付与される。');
 		it('aがen-mediaを変換したものである場合、');
 		it('[literal][/literal]の間はテキスト要素をHTML特殊文字を戻したもののみが使用される。');
+	});
+	describe('#setPublished', function() {
+		it('公開指定のタグGUIDを設定する。', function() {
+			Post.setPublished('test');
+		});
+	});
+	describe('#published()', function() {
+		it('公開記事を取得するクエリを発行する。', function() {
+			Post.setPublished('test');
+			var query = Post.published();
+			query._conditions.should.have.property('tags');
+			query._conditions.tags.should.have.property('$elemMatch');
+			query._conditions.tags.$elemMatch.should.have.property('guid', 'test');
+		});
 	});
 });

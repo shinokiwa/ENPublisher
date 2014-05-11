@@ -4,22 +4,23 @@ block outer
  .container
   .row.page-header
    a(href="/")
-    h1=site.Title
+    h1=site.title
 
  .container
   .col-md-8
    block content
   .col-md-4
-   .well Recent Posts
-    ul
-     each post in recentPosts
-      li
-       a(href="/post/#{post.url}")=post.title
+   if (recentPosts)
+    .well Recent Posts
+     ul
+      each post in recentPosts
+       li
+        a(href="/post/#{post.url}")=post.title
  if site.Analytics
   script.
    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-   ga('create', '#{site.Analytics}', location.host);
+   ga('create', '#{site.analytics}', location.host);
    ga('send', 'pageview');

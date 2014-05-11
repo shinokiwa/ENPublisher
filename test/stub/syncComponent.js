@@ -1,4 +1,4 @@
-var stub = module.exports = function() {
+var stub = function() {
 	this.USN = null;
 	this.message = new Array();
 	this.error = new Array();
@@ -8,6 +8,13 @@ var stub = module.exports = function() {
 	this.status = {
 		now : false,
 		string : null
+	};
+};
+
+module.exports = function () {
+	var sync = new stub();
+	return function () {
+		return sync;
 	};
 };
 

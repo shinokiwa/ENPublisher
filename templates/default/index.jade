@@ -1,7 +1,7 @@
 extends ./outer
 
 block content
-  each post in posts.posts
+  each post in posts
    article
     a(href="/post/#{post.url}")
      h2.post-title=post.title
@@ -10,15 +10,15 @@ block content
     p!=post.contentHTML
     hr
   ul.pager
-   if posts.page > 0
+   if page > 0
     li.previous
-     a(href="./?page=#{posts.page-1}") &lt;&lt; Newer
+     a(href="./?page=#{page-1}") &lt;&lt; Newer
    else
     li.previous.disabled
      a(href="#") &lt;&lt; Newer
-   if posts.startIndex+posts.posts.length < posts.totalPosts
+   if startIndex+posts.length < totalPosts
     li.next
-     a(href="./?page=#{posts.page+1}") Older &gt;&gt;
+     a(href="./?page=#{page+1}") Older &gt;&gt;
    else
     li.next.disabled
      a(href="#") Older &gt;&gt;	

@@ -1,17 +1,21 @@
 {
-	"Site": {
-		"Title": "ENPublisher!"
+	"site": {
+		"title": "",
+		"analytics": "",
+		"loginId": "",
+		"loginPassword": ""
 	},
-
-	"Login.ID": "admin",
-	"Login.Password": "password",
 	
-	"Evernote.Token": "",
-	"Evernote.NotebookGUID": "",
-	"Evernote.PublishedGUID": "",
-	"Evernote.Sanbox": true,
+	"evernote": {
+		"token": "",
+		"notebookGuid": "",
+		"publishedGuid": "",
+		"sandbox": true
+	},
 	
-	"Mongoose.Host": "localhost",
-	"Mongoose.Database": "enpublisher",
-	"Mongoose.Port": "27017"
+	"mongoose" : {
+		"host": "localhost",
+		"database": "enpublisher",
+		"port": "27017"
+	}
 }

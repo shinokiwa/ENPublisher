@@ -71,15 +71,31 @@ PostSchema.virtual('contentHTML').get(function() {
 });
 
 PostSchema.virtual('tagGuids').set(function(vals) {
-	for (var i in vals) {
+	for ( var i in vals) {
 		var isNew = true;
-		for (var n in this.tags) {
+		for ( var n in this.tags) {
 			if (this.tags[n].guid == vals[i]) {
 				isNew = false;
 			}
 		}
 		if (isNew) {
-			this.tags.push({guid: vals[i]});
+			this.tags.push({
+				guid : vals[i]
+			});
 		}
 	}
+});
+
+var publishedGuid;
+PostSchema.static('setPublished', function(guid) {
+	publishedGuid = guid;
+});
+PostSchema.static('published', function() {
+	return this.find({
+		tags : {
+			$elemMatch : {
+				guid : publishedGuid
+			}
+		}
+	});
 });
