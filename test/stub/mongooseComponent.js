@@ -20,7 +20,7 @@ var Post = function(data) {
 };
 
 Post.prototype.save = function(next) {
-	mongoose.once('Post.prototype.save', function(input, output) {
+	mongoose.once('Post.save', function(input, output) {
 		input.next(output.err);
 	});
 	var input = {
@@ -30,7 +30,7 @@ Post.prototype.save = function(next) {
 	var output = {
 		err : null
 	};
-	mongoose.emit('Post.prototype.save', input, output);
+	mongoose.emit('Post.save', input, output);
 };
 
 Post.find = function(conditions, fields, options, callback) {

@@ -29,9 +29,30 @@ describe('components.mongoose.postschema', function() {
 		it('guidとurlはユニークインデックスになっている。');
 	});
 	describe('#title', function() {
-		it('titleに値をセットすると、titleとurlが自動的に作成される。');
-		it('title、urlの左右の半角スペースおよびタブはトリムされる。');
-		it('urlはURLエンコード(encodeURIComponent)される。');
+		it('タイトルの左右の半角スペースおよびタブはトリムされる。', function() {
+			var post = new Post();
+			post.title = '	 TestTitle 	 ';
+			post.title.should.eql('TestTitle');
+		});
+		it('タイトルの#以降がURLとして扱われる。その際、タイトルは#までが使用される。', function() {
+			var post = new Post();
+			post.title = 'TestTitle # testURL/abc';
+			post.should.have.property('title', 'TestTitle');
+			post.should.have.property('url', 'testURL/abc');
+		});
+		it('タイトルに#が含まれていない場合、URLはタイトルをURLエンコード(encodeURIComponent)したものになる。', function() {
+			var post = new Post();
+			post.title = 'TestTitle/abc';
+			post.should.have.property('title', 'TestTitle/abc');
+			post.should.have.property('url', 'TestTitle%2Fabc');
+		});
+	});
+	describe('#url', function() {
+		it('urlの左右の半角スペースおよびタブはトリムされる。', function() {
+			var post = new Post();
+			post.url = '	 TestTitle 	 ';
+			post.url.should.eql('TestTitle');
+		});
 	});
 	describe('#contentHTML', function() {
 		var post = new Post();

@@ -1,4 +1,8 @@
-var stub = module.exports = function () {
+module.exports = function () {
+	return new stub();
+};
+
+var stub = function () {
 	this.metaData = [ {
 		guid : 'test-db-guid-01',
 		title : 'Test DB Title 01!'

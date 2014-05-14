@@ -8,10 +8,12 @@ module.exports.Controller = function(flow, request, response) {
 
 module.exports.Model = function(flow, request, response) {
 	var sync = flow.use('Sync');
-	response.locals.status = sync.status.string;
-	response.locals.queue = sync.queuedNotes;
 	response.locals.message = sync.message;
-	response.locals.error = sync.error;
+	response.locals.notes = sync.noteList.all();
+	response.locals.errors = sync.errorList.all();
+	response.locals.USN = sync.USN;
+	response.locals.lastSyncAll = sync.lastSyncAll;
+	response.locals.lastSync = sync.lastSync;
 	flow.next();
 };
 

@@ -26,7 +26,25 @@ var PostSchema = module.exports = new Schema({
 		name : String
 	} ],
 }, {
-	_id : false
+	_id : true
+});
+
+PostSchema.path('title').set(function(val) {
+	var title;
+	var split = val.split('#');
+	if (split.length == 1 || split[1].length < 1) {
+		title = split[0].trim();
+		this.url = encodeURIComponent(split[0].trim());
+	} else {
+		title = split[0].trim();
+		this.url = split[1].trim();
+	}
+
+	return title;
+});
+
+PostSchema.path('url').set(function(val) {
+	return val.trim();
 });
 
 PostSchema.virtual('contentHTML').get(function() {

@@ -1,15 +1,29 @@
 var Evernote = require('./evernoteComponent.js');
-var Sync = require('./syncComponent.js');
+var Sync = require('../../app/components/sync.js');
 var Post = require('./postComponent.js');
 var Database = require('./mongooseComponent.js');
 var Express = require ('./expressComponent.js');
+var EventEmitter = require('events').EventEmitter;
+var util = require("util");
 
 var stub = module.exports = function () {
 	var object = {};
+	object.app = new App ();
 	object.request = new Request ();
 	object.response = new Response ();
-	object.flow = new Flow(object.request, object.response);
+	object.flow = new Flow(object.app, [object.request, object.response]);
 	return object;
+};
+
+var App = function () {
+	EventEmitter.call(this);
+};
+util.inherits(App, EventEmitter);
+App.prototype.flow = function (flow) {
+	var self = this;
+	return function () {
+		self.emit(flow);
+	};
 };
 
 var Request = function () {
@@ -25,14 +39,15 @@ var Response = function () {
 Response.prototype.render = function () {
 };
 
-var Flow = function () {
+var Flow = function (app, args) {
 	this.locals = {};
 	this._components = {
 		Database: Database,
 		Express: Express,
-		Sync: Sync()
+		Sync: Sync(app),
+		Evernote: Evernote()
 	};
-	this._args = Array.prototype.slice.apply(arguments);
+	this._args = args;
 };
 
 Flow.prototype.next = function () {

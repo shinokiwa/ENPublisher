@@ -80,7 +80,7 @@ describe('Flows.Post', function() {
 				});
 
 				stub.flow.next = function() {
-					findCheck.should.be.ng;
+					findCheck.should.eql(false);
 					stub.response.locals.should.not.have.property('post');
 					done();
 				};

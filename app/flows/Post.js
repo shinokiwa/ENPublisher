@@ -15,7 +15,7 @@ module.exports.Model = {
 		if ('url' in flow.locals) {
 			var db = flow.use('Database');
 			var Post = db.model('Post');
-			Post.published().where({url: flow.locals.url}).findOne(function(err, data) {
+			Post.published().and({url: flow.locals.url}).findOne(function(err, data) {
 				if (err) {
 					console.error(err);
 				} else if (data) {

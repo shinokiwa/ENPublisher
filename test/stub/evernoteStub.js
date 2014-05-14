@@ -3,6 +3,7 @@ var util = require("util");
 var enData = require('./evernoteData.js');
 
 var Client = function(opt) {
+	this.token = opt.token;
 	this._noteStore = new NoteStore();
 };
 Client.prototype.getNoteStore = function() {

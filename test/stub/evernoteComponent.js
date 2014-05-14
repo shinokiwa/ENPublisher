@@ -2,7 +2,14 @@ var EventEmitter = require('events').EventEmitter;
 var util = require("util");
 var EvernoteData = require('./evernoteData');
 
-var stub = module.exports = function() {
+module.exports = function () {
+	var s = new stub();
+	return function () {
+		return s;
+	};
+};
+
+var stub = function() {
 	EventEmitter.call(this);
 	this.list = new Array();
 	this.list.push(new EvernoteData.MetaData('test-guid-1', 'Test Title 1'));
@@ -56,18 +63,18 @@ stub.prototype.getMetaAll = function(offset, next) {
 	var output = {
 		err : null
 	};
-	output.list = {
+	output.data = {
 		startIndex : offset,
 		totalNotes : 0,
 		updateCount : 46,
 		notes : new Array()
 	};
-	output.list.totalNotes = this.list.length;
+	output.data.totalNotes = this.list.length;
 	var i = offset;
 	while (i < this.list.length) {
 		if (i >= offset + 100)
 			break;
-		output.list.notes.push(this.list[i]);
+		output.data.notes.push(this.list[i]);
 		i++;
 	}
 	this.emit('getMetaAll', input, output);
@@ -122,8 +129,8 @@ stub.prototype.getNote = function(guid, next) {
 		err : null
 	};
 	output.data = null;
-	if (guid in self.notes) {
-		note = this.notes[guid];
+	if (guid in this.notes) {
+		output.data = this.notes[guid];
 	}
 	this.emit('getNote', input, output);
 };

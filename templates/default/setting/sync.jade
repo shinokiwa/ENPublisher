@@ -3,24 +3,23 @@ extends ./outer
 block content
  p sync status
  p
-  a(href="/setting/dosync/") Start sync all notes.
+  a(href="/setting/dosyncall/") Start sync all notes.
  dl
-  dt Status
+  dt Message
+  dd #{message}
+  dt USN
+  dd #{USN}
+  dt Last sync All
+  dd #{lastSyncAll}
+  dt Last sync
+  dd #{lastSync}
+  dt Notes
   dd
    ul
-    li #{status}
-  dt Queue
-  dd
-   ul
-    each val in queue
-     li #{val.title}(#{val.guid})
-  dt Messages
-  dd
-   ul
-    each val in message
-     li #{val}
+    each val in notes
+     li #{val.body}(#{val.key})
   dt Error
   dd
    ul
-    each val in error
-     li val
+    each val in errors
+     li #{val.body}(#{val.key})

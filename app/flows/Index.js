@@ -18,7 +18,7 @@ module.exports.Model = {
 	countPosts : function(flow, request, response) {
 		var db = flow.use('Database');
 		var Post = db.model('Post');
-		Post.published().count({}, function(err, count) {
+		Post.published().count(function(err, count) {
 			if (err) {
 				console.error(err);
 				flow.next();

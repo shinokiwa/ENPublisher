@@ -3,6 +3,12 @@ var db = mongoose.createConnection();
 var PostSchema = require ('./mongooses/postSchema.js');
 db.model('Post', PostSchema);
 
+db.on('connected', function () {
+	console.log ('Database connected');
+}).on('disconnected', function () {
+	console.log ('Database disconnected');
+});
+
 var host, database,port;
 
 var load = function (flow) {

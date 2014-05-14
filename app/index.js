@@ -13,6 +13,7 @@ module.exports.create = function (configurePath) {
 	app.set('Express', loadCom('express')(app, require ('express')));
 	app.set('Database', loadCom('mongoose')(app));
 	app.set('Sync', loadCom('sync')(app));
+	app.set('Evernote', loadCom('evernote')(app, require('evernote')));
 
 	//add flows
 	app.add('Index', loadFlow('Index'));
@@ -23,6 +24,10 @@ module.exports.create = function (configurePath) {
 	app.add('SyncStatus', loadFlow('SyncStatus'));
 	app.add('DoSyncAll', loadFlow('DoSyncAll'));
 	app.add('Error404', loadFlow('Error404'));
+	
+	app.add('BatchSyncAll', loadFlow('BatchSyncAll'));
+	app.add('BatchSyncChunk', loadFlow('BatchSyncChunk'));
+	app.add('BatchSyncNote', loadFlow('BatchSyncNote'));
 	
 	return app;
 };

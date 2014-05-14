@@ -2,38 +2,38 @@
 var ENPublisher = require('../app/index.js');
 var app = ENPublisher.create(__dirname + '/../configure.json');
 
-var flow = null;
-app.on('Model.BatchSyncAll', function(input, output, next) {
-	flow = 'BatchSyncAll';
-	next();
+var check = {
+	Controller : function(flow) {
+		console.log('flow', flow.name, 'start');
+		flow.next();
+	},
+	View : function(flow) {
+		var sync = flow.use('Sync');
+		console.log('USN', sync.USN);
+		var cnt = sync.noteList.count();
+		console.log('notes', cnt);
+		if (cnt) {
+			console.log('notes[0]', sync.noteList.get());
+		}
+		console.log('errors', sync.errorList.all());
+		console.log('lastSyncAll', sync.lastSyncAll);
+		console.log('lastSync', sync.lastSync);
+		console.log('flow', flow.name, 'end');
+		flow.next();
+	}
+};
+
+app.add('BatchSyncAll', check);
+app.add('BatchSyncNote', check);
+app.add('BatchSyncChunk', check);
+
+app.on('Controller.TestSync', function(flow) {
+	var sync = flow.use('Sync');
+//	sync.doSyncAll();
+	flow.next();
 });
 
-app.on('Model.BatchSyncNote', function(input, output, next) {
-	flow = 'BatchSyncNote';
-	next();
-});
-
-app.on('Model.BatchSyncChunk', function(input, output, next) {
-	flow = 'BatchSyncChunk';
-	next();
-});
-
-app.on('After.Model', function(input, output, next) {
-	var sync = input.components.sync();
-//	var post = input.components.post();
-	console.log('#### ' + flow + ' ####');
-	console.log('Queued Notes:');
-	console.log(sync.queuedNotes);
-	console.log('Errors:');
-	console.log(sync.error);
-	console.log('Messages:');
-	console.log(sync.message);
-	console.log('USN:');
-	console.log(sync.USN);
-	console.log('LastSync:');
-	console.log(sync.lastSyncTime);
-	flow = null;
-	next();
-});
-
-app.flow('BatchSyncAll')({}, {});
+app.flow('LoadConfig')();
+setTimeout(function() {
+	app.flow('TestSync')();
+}, 3000);

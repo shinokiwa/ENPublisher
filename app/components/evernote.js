@@ -1,18 +1,48 @@
-var Evernote;
+var Evernote, token, publishedGuid, notebookGuid, sandbox;
+var ENClient;
 
-var Client = function(client, notebook, published) {
-	this._client = client;
-	this._notebook = notebook;
-	this._published = published;
+module.exports = function(app, evernoteModule) {
+	Evernote = evernoteModule.Evernote;
+	app.on('Model.LoadConfig', loadConfig);
+	return function() {
+		var client = new Client();
+		return client;
+	};
+};
+
+var loadConfig = function (flow, request, response) {
+	var conf = flow.locals.configure.evernote;
+	token = conf.token;
+	notebookGuid = conf.notebookGuid;
+	publishedGuid = conf.publishedGuid;
+	sandbox = conf.sandbox;
+	ENClient = new Evernote.Client({
+		token : token,
+		sandbox: sandbox
+	});
+	flow.next();
+};
+
+var Client = function() {
+};
+
+Client.prototype.getMetaAll = function(offset, next) {
+	var noteStore = ENClient.getNoteStore();
+	var noteFilter = new Evernote.NoteFilter();
+	noteFilter.notebookGuid = notebookGuid;
+	var notesMetadataResultSpec = new Evernote.NotesMetadataResultSpec();
+	notesMetadataResultSpec.includeTitle = true;
+	notesMetadataResultSpec.includeUpdateSequenceNum = true;
+	noteStore.findNotesMetadata(noteFilter, offset, 100, notesMetadataResultSpec, next);
 };
 
 Client.prototype.getSyncState = function (next) {
-	var noteStore = this._client.getNoteStore();
+	var noteStore = ENClient.getNoteStore();
 	noteStore.getSyncState(next);
 };
 
 Client.prototype.getSyncChunk = function (usn, next){
-	var noteStore = this._client.getNoteStore();
+	var noteStore = ENClient.getNoteStore();
 	var filter = new Evernote.SyncChunkFilter();
 	filter.includeNotebooks = false;
 	filter.includeNotes = true;
@@ -20,19 +50,8 @@ Client.prototype.getSyncChunk = function (usn, next){
 	noteStore.getFilteredSyncChunk(usn, 100, filter, next);
 };
 
-Client.prototype.getMetaAll = function(offset, next) {
-	var noteStore = this._client.getNoteStore();
-	var noteFilter = new Evernote.NoteFilter();
-	noteFilter.notebookGuid = this._notebook;
-	var notesMetadataResultSpec = new Evernote.NotesMetadataResultSpec();
-	notesMetadataResultSpec.includeTitle = true;
-	notesMetadataResultSpec.includeUpdateSequenceNum = true;
-	noteStore.findNotesMetadata(noteFilter, offset, 100, notesMetadataResultSpec, next);
-};
-
 Client.prototype.getNote = function(guid, next) {
-	var noteStore = this._client.getNoteStore();
-	var self = this;
+	var noteStore = ENClient.getNoteStore();
 	noteStore.getNote(guid, true, true, false, false, function(err, data) {
 		if (err) {
 			if ('identifier' in err && err.identifier == 'Note.guid') {
@@ -41,7 +60,7 @@ Client.prototype.getNote = function(guid, next) {
 				next(err, null);
 			}
 		} else {
-			if (data && data.notebookGuid == self._notebook && data.deleted == null) {
+			if (data && data.notebookGuid == notebookGuid && data.deleted == null) {
 				var note = {
 					guid : data.guid,
 					title : data.title,
@@ -59,16 +78,4 @@ Client.prototype.getNote = function(guid, next) {
 			}
 		}
 	});
-};
-
-module.exports = function(EvernoteModule, token, notebookGUID, publishedGUID, sandbox) {
-	Evernote = EvernoteModule.Evernote;
-	var evernoteClient = new Evernote.Client({
-		token : token,
-		sandbox: sandbox
-	});
-	var client = new Client(evernoteClient, notebookGUID, publishedGUID);
-	return function() {
-		return client;
-	};
 };
