@@ -1,11 +1,14 @@
-var Evernote, token, publishedGuid, notebookGuid, sandbox;
-var ENClient;
+var Evernote = require ('evernote').Evernote;
+var token, publishedGuid, notebookGuid, sandbox, noteStoreUrl;
 
-module.exports = function(app, evernoteModule) {
-	Evernote = evernoteModule.Evernote;
+module.exports = function(app) {
 	app.on('Model.LoadConfig', loadConfig);
 	return function() {
 		var client = new Client();
+		client._client = new Evernote.Client({
+			token : token,
+			sandbox: sandbox,
+		});
 		return client;
 	};
 };
@@ -16,10 +19,7 @@ var loadConfig = function (flow, request, response) {
 	notebookGuid = conf.notebookGuid;
 	publishedGuid = conf.publishedGuid;
 	sandbox = conf.sandbox;
-	ENClient = new Evernote.Client({
-		token : token,
-		sandbox: sandbox
-	});
+	noteStoreUrl = conf.noteStoreUrl;
 	flow.next();
 };
 
@@ -27,7 +27,7 @@ var Client = function() {
 };
 
 Client.prototype.getMetaAll = function(offset, next) {
-	var noteStore = ENClient.getNoteStore();
+	var noteStore = this._client.getNoteStore(noteStoreUrl);
 	var noteFilter = new Evernote.NoteFilter();
 	noteFilter.notebookGuid = notebookGuid;
 	var notesMetadataResultSpec = new Evernote.NotesMetadataResultSpec();
@@ -37,12 +37,12 @@ Client.prototype.getMetaAll = function(offset, next) {
 };
 
 Client.prototype.getSyncState = function (next) {
-	var noteStore = ENClient.getNoteStore();
+	var noteStore = this._client.getNoteStore(noteStoreUrl);
 	noteStore.getSyncState(next);
 };
 
 Client.prototype.getSyncChunk = function (usn, next){
-	var noteStore = ENClient.getNoteStore();
+	var noteStore = this._client.getNoteStore(noteStoreUrl);
 	var filter = new Evernote.SyncChunkFilter();
 	filter.includeNotebooks = false;
 	filter.includeNotes = true;
@@ -51,28 +51,17 @@ Client.prototype.getSyncChunk = function (usn, next){
 };
 
 Client.prototype.getNote = function(guid, next) {
-	var noteStore = ENClient.getNoteStore();
+	var noteStore = this._client.getNoteStore(noteStoreUrl);
 	noteStore.getNote(guid, true, true, false, false, function(err, data) {
 		if (err) {
 			if ('identifier' in err && err.identifier == 'Note.guid') {
-				next(null, null);
+				next(null);
 			} else {
-				next(err, null);
+				next(err, data);
 			}
 		} else {
 			if (data && data.notebookGuid == notebookGuid && data.deleted == null) {
-				var note = {
-					guid : data.guid,
-					title : data.title,
-					content : data.content,
-					created : data.created,
-					updated : data.updated,
-					deleted : data.deleted,
-					updateSequenceNum : data.updateSequenceNum,
-					tagGuids : data.tagGuids,
-					resources : data.resources,
-				};
-				next(null, note);
+				next(null, data);
 			} else {
 				next(null, null);
 			}

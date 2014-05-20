@@ -1,150 +1,98 @@
-var EventEmitter = require ('events').EventEmitter;
-var util = require("util");
+var List = require('./sync/list.js');
 var app, sync;
 
-module.exports = function (App) {
+module.exports = function(App) {
 	app = App;
-	app.on('Model.LoadConfig', loadConfig);
-	sync = new Sync();
-	app.on('View.LoadConfig', function (flow) {
-		flow.async('BatchSyncChunk')();
+	app.on('Model.LoadConfig', function(flow) {
+		loadConfig();
 		flow.next();
 	});
-	return function () {
+	loadConfig();
+	return function() {
 		return sync;
 	};
 };
 
-var loadConfig = function (flow) {
+var loadConfig = function() {
 	sync = new Sync();
-	flow.next();
+	sync.duration(10);
 };
 
-var Sync = function () {
-	EventEmitter.call(this);
+var Sync = function() {
 	this.USN = null;
 	this.message = null;
 	this.lastSync = null;
 	this.lastSyncAll = null;
-	this.standby = null;
-	this.noteList = new List ();
-	this.tagList = new List ();
-	this.errorList = new List ();
-	this.resetInterval();
-	
-	this._lock = false;
-	this._timer = null;
-	this.on('unlock', this.doSync);
+	this.noteList = new List();
+	this.tagList = new List();
+	this.errorList = new List();
+
+	this._lock = 0;
+	this._syncAllWaitUnlock = false;
+	this._duration = 0;
 };
 
-util.inherits(Sync, EventEmitter);
+Sync.prototype.intervalSyncAll = 15 * 60 * 1000;
 
-Sync.prototype.resetInterval = function () {
-	this.intervalSyncAll = 15 * 60 * 1000;
-	this.intervalSyncChunk = 60 * 1000;
-	this.intervalSyncNote = 1000;
-	this.intervalSyncTag = 1000;
-};
-
-Sync.prototype.lock = function (message) {
+Sync.prototype.lock = function(message) {
 	if (this._lock) {
-		return false;
+		return 0;
 	} else {
-		this._lock = true;
+		this._lock = Math.random() + 1;
 		this.message = message;
-		return true;
+		return this._lock;
 	}
 };
 
-Sync.prototype.unlock = function () {
-	if (this._lock) {
+Sync.prototype.unlock = function(key) {
+	if (this._lock == key) {
 		this._lock = false;
 		this.message = null;
-		this.emit('unlock');
+		if (this._syncAllWaitUnlock) {
+			this.doSyncAll();
+			this._syncAllWaitUnlock = false;
+		}
 	}
 };
 
-Sync.prototype.doSyncAll = function () {
+Sync.prototype.doSyncAll = function() {
+	this._syncAllWaitUnlock = false;
 	var now = new Date();
-	if (now - this.lastSyncAll < this.intervalSyncAll) {
+	if (this._lock) {
+		this._syncAllWaitUnlock = true;
+	} else if (now - this.lastSyncAll < this.intervalSyncAll) {
 		this.errorList.add('BatchSyncAll', 'Please run Sync All at intervals for more than 15 minutes all year.');
 	} else {
-		if (this._lock) {
-			this._lock = false;
-			this.message = null;
-			this.standby = null;
-			clearTimeout(this._timer);
-		}
 		app.flow('BatchSyncAll')();
 	}
 };
 
-Sync.prototype.doSync = function () {
-	clearTimeout(this._timer);
-	if (this.standby) {
-		this.standby();
-		this.standby = null;
-	} else {
-		if (this.noteList.get()) {
-			if (this.lock('Wait', 'Waiting SyncNote.')) {
-				this.standby = function () {
-					app.flow('BatchSyncNote')();
-				};
-				var self = this;
-				this._timer = setTimeout (function () {
-					self.unlock();
-				}, this.intervalSyncNote);
+Sync.prototype.duration = function (timer) {
+	this._duration = timer;
+	Sync.timeoutTick (this);
+};
+
+Sync.prototype.tick = function () {
+	if (!this._lock && this._duration > 0) {
+		this._duration--;
+		if (this._duration) {
+			if (this.noteList.count()) {
+				app.flow('BatchSyncNote')();
+			} else if (this.tagList.count()) {
+				app.flow('BatchSyncTag')();
+			} else {
+				Sync.timeoutTick(this);
 			}
 		} else {
-			if (this.lock('Waiting SyncChunk.')) {
-				this.standby = function () {
-					app.flow('BatchSyncChunk')();
-				};
-				var self = this;
-				this._timer = setTimeout (function () {
-					self.unlock();
-				}, this.intervalSyncChunk);
-			}
+			app.flow('BatchSyncChunk')();
 		}
 	}
 };
 
-var List = function () {
-	this._list = {};
-};
-
-List.prototype.add = function (key, body) {
-	if (key) {
-		this._list[key] = body;
-	}
-};
-List.prototype.remove = function (key) {
-	if (key) {
-		delete(this._list[key]);
-	}
-};
-List.prototype.get = function () {
-	for (var i in this._list) {
-		return {
-			key: i,
-			body: this._list[i]
-		};
-	}
-};
-List.prototype.all = function () {
-	var all = new Array();
-	for (var i in this._list) {
-		all.push({
-			key: i,
-			body: this._list[i]
-		});
-	}
-	return all;
-};
-List.prototype.count = function () {
-	var count = 0;
-	for (var i in this._list) {
-		i && count++;
-	}
-	return count;
+var timer = null;
+Sync.timeoutTick = function (sync) {
+	clearTimeout(timer);
+	timer = setTimeout(function () {
+		sync.tick();
+	}, 1000);
 };

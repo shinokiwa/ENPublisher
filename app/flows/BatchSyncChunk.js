@@ -1,9 +1,10 @@
 module.exports.Controller = function(flow) {
 	var sync = flow.use('Sync');
-	if (sync.lock('Processing BatchSyncChunk.')) {
+	flow.locals.lock = sync.lock('Processing BatchSyncChunk.');
+	if (flow.locals.lock) {
 		flow.next();
 	} else {
-		sync.errorList.add(flow.name, 'Failed to get lock.');
+		sync.errorList.add('BatchSyncChunk', 'Failed to get lock.');
 	}
 };
 
@@ -21,7 +22,6 @@ module.exports.Model = function(flow) {
 			} else if (state.updateCount > sync.USN) {
 				evernote.getSyncChunk(sync.USN, function(err, chunk) {
 					if (err) {
-						throw new Error (err);
 						sync.errorList.add(flow.name, JSON.stringify(err));
 					} else {
 						if ('notes' in chunk && chunk.notes) {
@@ -29,7 +29,7 @@ module.exports.Model = function(flow) {
 								sync.noteList.add(note.guid, note.title);
 							});
 						}
-						sync.USN = chunk.updateCount;
+						sync.USN = chunk.chunkHighUSN;
 						sync.lastSync = new Date();
 					}
 					flow.next();
@@ -44,6 +44,7 @@ module.exports.Model = function(flow) {
 
 module.exports.View = function(flow) {
 	var sync = flow.use('Sync');
-	sync.unlock();
+	sync.unlock(flow.locals.lock);
+	sync.duration(60);
 	flow.next();
 };

@@ -1,15 +1,15 @@
 module.exports.Controller = function(flow) {
 	var sync = flow.use('Sync');
-	if (sync.lock('Processing BatchSyncNote.')) {
+	flow.locals.lock = sync.lock('Processing BatchSyncNote.');
+	if (flow.locals.lock) {
 		flow.next();
 	} else {
-		sync.errorList.add(flow.name, 'Failed to get lock.');
+		sync.errorList.add('BatchSyncNote', 'Failed to get lock.');
 	}
 };
 
 module.exports.Model = function(flow) {
 	var evernote = flow.use('Evernote');
-	var Post = flow.use('Database').model('Post');
 	var sync = flow.use('Sync');
 
 	var target = sync.noteList.get();
@@ -22,54 +22,9 @@ module.exports.Model = function(flow) {
 				flow.next();
 			} else {
 				if (note) {
-					flow.locals.note = note;
-					var post = new Post(note);
-					Post.find({
-						$or : [ {
-							url : post.url
-						}, {
-							guid : post.guid
-						} ]
-					}, function(err, data) {
-						if (err) {
-							sync.errorList.add(target.key, err);
-							flow.next();
-						} else if (data.length > 1 || (data.length == 1 && data[0].guid !== target.key)) {
-							sync.errorList.add(target.key, 'duplicate URL.');
-							flow.next();
-						} else if (data.length == 1) {
-							data[0].set(note).save(function(err) {
-								if (err) {
-									sync.errorList.add(target.key, err);
-								} else {
-									sync.errorList.remove(target.key);
-								}
-								flow.after(afterSave);
-								flow.next();
-							});
-						} else {
-							post.save(function(err) {
-								if (err) {
-									sync.errorList.add(target.key, err);
-								} else {
-									sync.errorList.remove(target.key);
-								}
-								flow.after(afterSave);
-								flow.next();
-							});
-						}
-					});
+					saveNote(flow, note);
 				} else {
-					Post.remove({
-						guid : target.key
-					}, function(err) {
-						if (err) {
-							sync.errorList.add(target.key, err);
-						} else {
-							sync.errorList.remove(target.key);
-						}
-						flow.next();
-					});
+					removeNote(flow, target);
 				}
 			}
 		});
@@ -78,8 +33,48 @@ module.exports.Model = function(flow) {
 	}
 };
 
-var afterSave = function(flow) {
-	var note = flow.locals.note;
+var saveNote = function (flow, note) {
+	var Post = flow.use('Database').model('Post');
+	var post = new Post(note);
+	var sync = flow.use('Sync');
+	Post.find({
+		$or : [ {
+			url : post.url
+		}, {
+			guid : post.guid
+		} ]
+	}, function(err, data) {
+		if (err) {
+			sync.errorList.add(note.guid, err);
+			flow.next();
+		} else if (data.length > 1 || (data.length == 1 && data[0].guid !== note.guid)) {
+			sync.errorList.add(note.guid, 'duplicate URL in "'+note.title+'".');
+			flow.next();
+		} else if (data.length == 1) {
+			data[0].set(note).save(function(err) {
+				if (err) {
+					sync.errorList.add(note.guid, err);
+					flow.next();
+				} else {
+					sync.errorList.remove(note.guid);
+					saveResource(flow, note);
+				}
+			});
+		} else {
+			post.save(function(err) {
+				if (err) {
+					sync.errorList.add(post.guid, err);
+					flow.next();
+				} else {
+					sync.errorList.remove(post.guid);
+					saveResource(flow, note);
+				}
+			});
+		}
+	});
+};
+
+var saveResource = function(flow, note) {
 	if (note.resources && note.resources.length > 0) {
 		var path = require('path');
 		var fs = require('fs');
@@ -106,8 +101,23 @@ var afterSave = function(flow) {
 	}
 };
 
+var removeNote = function (flow, target) {
+	var Post = flow.use('Database').model('Post');
+	var sync = flow.use('Sync');
+	Post.remove({
+		guid : target.key
+	}, function(err) {
+		if (err) {
+			sync.errorList.add(target.key, err);
+		} else {
+			sync.errorList.remove(target.key);
+		}
+		flow.next();
+	});
+};
+
 module.exports.View = function(flow) {
 	var sync = flow.use('Sync');
-	sync.unlock();
+	sync.unlock(flow.locals.lock);
 	flow.next();
 };

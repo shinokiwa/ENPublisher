@@ -1,0 +1,22 @@
+{
+	"site": {
+		"title": "",
+		"analytics": "",
+		"loginId": "",
+		"loginPassword": ""
+	},
+	
+	"evernote": {
+		"token": "TEST-TOKEN",
+		"notebookGuid": "TEST-NOTEBOOK-GUID",
+		"publishedGuid": "TEST-PUBLISHED-GUID",
+		"sandbox": true,
+		"noteStoreUrl": "http://localhost/"
+	},
+	
+	"mongoose" : {
+		"host": "localhost",
+		"database": "enpublisher_unittest",
+		"port": "27017"
+	}
+}

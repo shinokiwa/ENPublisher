@@ -29,3 +29,5 @@ node_modules
 configure.json
 resources/*
 !resources/.gitkeep
+app-cov
+coverage.html

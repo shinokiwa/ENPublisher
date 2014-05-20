@@ -1,6 +1,7 @@
 module.exports.Controller = function (flow) {
 	var sync = flow.use('Sync');
-	if (sync.lock('Processing BatchSyncAll.')) {
+	flow.locals.lock = sync.lock('Processing BatchSyncAll.');
+	if (flow.locals.lock) {
 		flow.locals.offset = 0;
 		flow.next();
 	} else {
@@ -54,6 +55,7 @@ module.exports.Model.Database = function (flow) {
 
 module.exports.View = function (flow) {
 	var sync = flow.use('Sync');
-	sync.unlock();
+	sync.unlock(flow.locals.lock);
+	sync.duration(15 * 60);
 	flow.next();
 };
