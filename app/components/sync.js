@@ -67,12 +67,12 @@ Sync.prototype.doSyncAll = function() {
 	}
 };
 
-Sync.prototype.duration = function (timer) {
+Sync.prototype.duration = function(timer) {
 	this._duration = timer;
-	Sync.timeoutTick (this);
+	Sync.timeoutTick(this);
 };
 
-Sync.prototype.tick = function () {
+Sync.prototype.tick = function() {
 	if (!this._lock && this._duration > 0) {
 		this._duration--;
 		if (this._duration) {
@@ -80,19 +80,20 @@ Sync.prototype.tick = function () {
 				app.flow('BatchSyncNote')();
 			} else if (this.tagList.count()) {
 				app.flow('BatchSyncTag')();
-			} else {
-				Sync.timeoutTick(this);
 			}
 		} else {
 			app.flow('BatchSyncChunk')();
 		}
 	}
+	if (this._duration) {
+		Sync.timeoutTick(this);
+	}
 };
 
 var timer = null;
-Sync.timeoutTick = function (sync) {
+Sync.timeoutTick = function(sync) {
 	clearTimeout(timer);
-	timer = setTimeout(function () {
+	timer = setTimeout(function() {
 		sync.tick();
 	}, 1000);
 };

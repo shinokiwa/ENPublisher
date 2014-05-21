@@ -265,11 +265,21 @@ describe('components/sync', function() {
 			expect(spy.calledWith('BatchSyncTag')).to.eql(true);
 			suite.app.flow.restore();
 		});
-		it('タイマが残っている場合、Sync.timeoutTickを実行する。', function() {
+		it('タイマが残っている場合、Sync.timeoutTickを実行する。ロック中、同期待ちがある状態でも実行する。', function() {
 			var spy = sinon.spy(Sync, 'timeoutTick');
 			sync._duration = 5;
 			sync.tick();
-			expect(spy.called).to.eql(true);
+			var lock = sync.lock('Timer');
+			sync._duration = 1000;
+			sync.tick();
+			sync.unlock(lock);
+			sync.noteList.add('TEST-NOTE', 'AAAA');
+			sync._duration = 5;
+			sync.tick();
+			sync.tagList.add('TEST-TAG', 'AAAA');
+			sync._duration = 5;
+			sync.tick();
+			expect(spy.callCount).to.eql(4);
 			Sync.timeoutTick.restore();
 		});
 		it('タイマがメソッド実行前から0の場合は何もしない。', function() {
