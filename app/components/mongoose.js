@@ -15,7 +15,9 @@ var load = function (flow) {
 	host = flow.locals.configure.mongoose.host;
 	database = flow.locals.configure.mongoose.database;
 	port = flow.locals.configure.mongoose.port;
-	db.model('Post').setPublished(flow.locals.configure.evernote.publishedGuid);
+	var Post = db.model('Post');
+	Post.setPublished(flow.locals.configure.evernote.publishedGuid);
+	Post.setSiteDomain(flow.locals.configure.site.domain);
 	flow.next();
 };
 

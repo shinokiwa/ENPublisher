@@ -18,6 +18,7 @@ module.exports.create = function (configurePath) {
 	//add flows
 	app.add('Index', loadFlow('Index'));
 	app.add('Post', loadFlow('Post'));
+	app.add('FindId', loadFlow('FindId'));
 	app.add('Login', loadFlow('Login'));
 	app.add('DoLogin', loadFlow('DoLogin'));
 	app.add('DoLogout', loadFlow('DoLogout'));

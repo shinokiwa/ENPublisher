@@ -27,10 +27,10 @@ var Response = function() {
 module.exports = function(callback) {
 	var suite = {};
 	suite.app = ENPublisher.create(__dirname + '/unittest.configure.json');
-	suite.flow = new App.FlowController(suite.app);
 	suite.request = new Request();
 	suite.response = new Response();
 	suite.require = testRequire;
+	suite.flow = new App.FlowController(suite.app, 'TEST', [suite.request, suite.response]);
 	if (callback) {
 		suite.app.once('View.LoadConfig', function (flow) {
 			callback();

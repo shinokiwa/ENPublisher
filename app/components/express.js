@@ -29,6 +29,7 @@ module.exports = function(app) {
 
 	router.get('/', app.flow('Index'));
 	router.get('/post/:url', app.flow('Post'));
+	router.get('/id/:id', app.flow('FindId'));
 	router.get('/setting/', app.flow('Login'));
 	router.get('/setting/login/', app.flow('Login'));
 	router.post('/setting/login/', app.flow('DoLogin'));

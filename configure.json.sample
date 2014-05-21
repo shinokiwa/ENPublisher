@@ -1,6 +1,7 @@
 {
 	"site": {
 		"title": "",
+		"domain": "",
 		"analytics": "",
 		"loginId": "",
 		"loginPassword": ""

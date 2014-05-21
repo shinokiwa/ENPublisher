@@ -5,7 +5,7 @@ var db = require('mongoose');
 db.model('Post', com);
 var Post = db.model('Post');
 
-describe('components.mongoose.postschema', function() {
+describe('components/mongoose/postSchema', function() {
 	describe('#Schema', function() {
 		it('Postスキーマを取得できる。', function() {
 			Post.should.be.type('function');
@@ -21,10 +21,6 @@ describe('components.mongoose.postschema', function() {
 			post.should.have.property('created', null);
 			post.should.have.property('updated', null);
 			post.should.have.property('published', null);
-		});
-		it('_idは持たない。', function() {
-			var post = new Post();
-			post.should.not.have.property('_id');
 		});
 		it('guidとurlはユニークインデックスになっている。');
 	});
@@ -96,9 +92,23 @@ describe('components.mongoose.postschema', function() {
 			var contentHTML = '<div><br clear="none"/></div><div><br/></div>';
 			post.contentHTML.should.eql(contentHTML);
 		});
-		it('aのリンク先がevernoteプロトコルで指定されている場合、/id/[guid]に変換される。');
-		it('aのリンク先が外部サイトの場合、target="_blank"が付与される。');
-		it('aがen-mediaを変換したものである場合、');
+		it('aのリンク先がevernoteプロトコルで指定されている場合、/id/[guid]に変換される。', function () {
+			post.content = contentBase.replace('__CONTENT__', '<div><a href="evernote:///view/4348674/s40/66234cce-7dbf-46b3-90e5-58e6cfe92f5d/66234cce-7dbf-46b3-90e5-58e6cfe92f5d/">TEST-NOTE</a></div><div><br/></div>');
+			var contentHTML = '<div><a href="/id/66234cce-7dbf-46b3-90e5-58e6cfe92f5d">TEST-NOTE</a></div><div><br/></div>';
+			post.contentHTML.should.eql(contentHTML);
+		});
+		it('aのリンク先が外部サイトの場合、target="_blank"が付与される。', function () {
+			Post.setSiteDomain('localhost');
+			post.content = contentBase.replace('__CONTENT__', '<div><a href="http://www.google.co.jp/">Google</a></div><div><br/></div>');
+			var contentHTML = '<div><a href="http://www.google.co.jp/" target="_blank">Google</a></div><div><br/></div>';
+			post.contentHTML.should.eql(contentHTML);
+		});
+		it('aのリンク先が同一ドメインの場合は何もしない。', function () {
+			Post.setSiteDomain('localhost');
+			post.content = contentBase.replace('__CONTENT__', '<div><a href="http://localhost/">LocalHost</a></div><div><br/></div>');
+			var contentHTML = '<div><a href="http://localhost/">LocalHost</a></div><div><br/></div>';
+			post.contentHTML.should.eql(contentHTML);
+		});
 		it('[literal][/literal]の間はテキスト要素をHTML特殊文字を戻したもののみが使用される。');
 	});
 	describe('#setPublished', function() {

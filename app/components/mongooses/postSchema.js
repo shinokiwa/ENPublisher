@@ -1,5 +1,6 @@
 var Schema = require('mongoose').Schema;
 var libxmljs = require('libxmljs');
+var url = require ('url');
 
 var PostSchema = module.exports = new Schema({
 	url : {
@@ -47,10 +48,30 @@ PostSchema.path('url').set(function(val) {
 	return val.trim();
 });
 
+var siteDomain;
+PostSchema.static('setSiteDomain', function(domain) {
+	siteDomain = domain;
+});
 PostSchema.virtual('contentHTML').get(function() {
 	var result = '';
 	if (this.content) {
 		var xmlDoc = libxmljs.parseXmlString(this.content);
+
+		var links = xmlDoc.find('//a');
+		for ( var i in links) {
+			var link = url.parse(links[i].attr('href').value());
+			if (link.protocol == 'evernote:') {
+				var guid = link.pathname.split('/')[4];
+				links[i].attr({
+					href : '/id/'+guid,
+					target : '_self'
+				});
+			} else if (link.hostname != siteDomain) {
+				links[i].attr({
+					target : '_blank'
+				});
+			}
+		}
 
 		var medias = xmlDoc.find('//en-media');
 		for ( var i in medias) {

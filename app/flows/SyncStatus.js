@@ -12,6 +12,7 @@ module.exports.Model = function(flow, request, response) {
 	response.locals.notes = sync.noteList.all();
 	response.locals.errors = sync.errorList.all();
 	response.locals.USN = sync.USN;
+	response.locals.duration = sync._duration;
 	response.locals.lastSyncAll = sync.lastSyncAll;
 	response.locals.lastSync = sync.lastSync;
 	flow.next();
