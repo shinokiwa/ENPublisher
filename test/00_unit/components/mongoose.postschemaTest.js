@@ -1,5 +1,6 @@
+var chai = require('chai');
+var should = chai.should(), expect = chai.expect;
 var com = require('../../../app/components/mongooses/postSchema.js');
-require('should');
 // DBには接続しないため、mongooseと結合状態でテストする。
 var db = require('mongoose');
 db.model('Post', com);
@@ -8,20 +9,11 @@ var Post = db.model('Post');
 describe('components/mongoose/postSchema', function() {
 	describe('#Schema', function() {
 		it('Postスキーマを取得できる。', function() {
-			Post.should.be.type('function');
+			Post.should.be.a('function');
 			var post = new Post();
-			post.should.be.type('object');
+			post.should.be.a('object');
 		});
-		it('Postスキーマのインスタンスはguid、title、url、content、created、updated、publishedをプロパティに持つ。初期値は全てnull。', function() {
-			var post = new Post();
-			post.should.have.property('guid', null);
-			post.should.have.property('title', null);
-			post.should.have.property('url', null);
-			post.should.have.property('content', null);
-			post.should.have.property('created', null);
-			post.should.have.property('updated', null);
-			post.should.have.property('published', null);
-		});
+		it('Postスキーマのインスタンスはguid、title、url、content、created、updated、publishedをプロパティに持つ。初期値は全てnull。');
 		it('guidとurlはユニークインデックスになっている。');
 	});
 	describe('#title', function() {
@@ -94,7 +86,7 @@ describe('components/mongoose/postSchema', function() {
 		});
 		it('aのリンク先がevernoteプロトコルで指定されている場合、/id/[guid]に変換される。', function () {
 			post.content = contentBase.replace('__CONTENT__', '<div><a href="evernote:///view/4348674/s40/66234cce-7dbf-46b3-90e5-58e6cfe92f5d/66234cce-7dbf-46b3-90e5-58e6cfe92f5d/">TEST-NOTE</a></div><div><br/></div>');
-			var contentHTML = '<div><a href="/id/66234cce-7dbf-46b3-90e5-58e6cfe92f5d">TEST-NOTE</a></div><div><br/></div>';
+			var contentHTML = '<div><a href="/id/66234cce-7dbf-46b3-90e5-58e6cfe92f5d" target="_self">TEST-NOTE</a></div><div><br/></div>';
 			post.contentHTML.should.eql(contentHTML);
 		});
 		it('aのリンク先が外部サイトの場合、target="_blank"が付与される。', function () {
