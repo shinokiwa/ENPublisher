@@ -1,49 +1,52 @@
-var sinon = require('sinon');
-var chai = require('chai');
-var should = chai.should(), expect = chai.expect;
-
-var suite, flow, sync, Sync, List;
-var setup = require('../setup.js');
-var EventEmitter = require('events').EventEmitter;
+var lib = require('../testlib.js');
+var chai = lib.chai;
+var expect = chai.expect;
+var sinon = lib.sinon;
+var App = lib.require('app.js');
+var List = lib.require('components/sync/list.js');
+var Sync, sync, sync2, app;
 
 describe('components/sync', function() {
-	beforeEach(function() {
-		suite = setup();
-		flow = suite.flow;
-		sync = flow.use('Sync');
-		Sync = sync.constructor;
-		List = suite.require('components/sync/list.js');
+	beforeEach(function(done) {
+		app = lib.create(__dirname + '/../unittest.configure.json');
+		app.ready(function(next) {
+			sync = this.use('Sync');
+			sync2 = this.use('Sync');
+			Sync = sync.constructor;
+			next();
+			done();
+		});
+		app.process();
 	});
-	it('バックエンドで同期処理を制御するコンポーネント。flow.useで取得できる。', function() {
-		flow.use('Sync').should.be.an('object');
+	it('バックエンドで同期処理を制御するコンポーネント。フロー中にuseで取得できる。', function() {
+		sync.should.be.an('object');
 	});
 	it('syncコンポーネントは別々の変数に代入しても同一の参照となる。', function() {
-		var sync2 = flow.use('Sync');
 		sync.should.have.property('USN', null);
 		sync2.should.have.property('USN', null);
 		sync.USN = 334;
 		sync.should.have.property('USN', 334);
 		sync2.should.have.property('USN', 334);
 	});
-	it('LoadConfigフロー実行の度に再生成される。その際、duration(10)を動作させる。', function(done) {
+	it('Configureフロー実行の度に再生成される。その際、duration(10)を動作させる。', function(done) {
 		var spy = sinon.spy(Sync.prototype, 'duration');
 
 		sync.test = 'TestValue!';
 		sync.USN = 10;
-		suite.app.on('View.LoadConfig', function(flow) {
-			var sync = flow.use('Sync');
+		app.configure(function(configure, next) {
+			var sync = this.use('Sync');
 			sync.should.not.have.property('test');
 			sync.should.have.property('USN', null);
 
 			expect(spy.calledOnce).to.eql(true);
 			expect(spy.calledWith(10)).to.eql(true);
-			
+
 			Sync.prototype.duration.restore();
 
-			flow.next();
+			next();
 			done();
 		});
-		suite.app.flow('LoadConfig')();
+		app.flow('Configure')(require(app._configure));
 	});
 	describe('#USN', function() {
 		it('EvernoteのUpdateSequenceNumberを保持する属性。初期値NULL。', function() {
@@ -137,15 +140,19 @@ describe('components/sync', function() {
 
 	describe('#doSyncAll()', function() {
 		it('全同期(BatchSyncAll)フローを実行する。', function(done) {
-			suite.app.once('Controller.BatchSyncAll', function(flow) {
-				done();
+			app.add('BatchSyncAll', {
+				Controller : function(next) {
+					done();
+				}
 			});
 			sync.doSyncAll();
 		});
 		it('ロックがかかっている場合、ロックの開放時に実行する。', function(done) {
-			suite.app.once('Controller.BatchSyncAll', function(flow) {
-				check.should.eql(true);
-				done();
+			app.add('BatchSyncAll', {
+				Controller : function(next) {
+					check.should.eql(true);
+					done();
+				}
 			});
 			var key = sync.lock('Test');
 			var check = false;
@@ -157,9 +164,10 @@ describe('components/sync', function() {
 		});
 		it('アンロック待ちになった後は、複数回アンロックしても一度だけ実行される。', function(done) {
 			var check = 0;
-			suite.app.on('Controller.BatchSyncAll', function(flow) {
-				check++;
-				sync.unlock(flow.locals.lock);
+			app.add('BatchSyncAll', {
+				Controller : function(next) {
+					check++;
+				}
 			});
 			var key = sync.lock('Test');
 			key.should.not.eql(0);
@@ -181,8 +189,10 @@ describe('components/sync', function() {
 		});
 		it('前回実行時(lastSyncAll)からintervalSyncAll(ミリ秒、初期15分)以内の場合は同期しない。', function(done) {
 			sync.lastSyncAll = new Date((new Date()) - 15 * 60 * 1000 + 1000);
-			suite.app.once('Controller.BatchSyncAll', function(flow) {
-				throw new Error('Flow BatchSyncAll should not be called.');
+			app.add('BatchSyncAll', {
+				Controller : function(next) {
+					throw new Error('Flow BatchSyncAll should not be called.');
+				}
 			});
 			sync.doSyncAll();
 			setTimeout(function() {
@@ -192,8 +202,10 @@ describe('components/sync', function() {
 		it('intervalSyncAllの値を変更すると同期禁止期間を操作できる。', function(done) {
 			sync.lastSyncAll = new Date((new Date()) - 15 * 60 * 1000 + 1000);
 			sync.intervalSyncAll = 14 * 60 * 1000;
-			suite.app.once('Controller.BatchSyncAll', function(flow) {
-				done();
+			app.add('BatchSyncAll', {
+				Controller : function(next) {
+					done();
+				}
 			});
 			sync.doSyncAll();
 		});
@@ -241,31 +253,36 @@ describe('components/sync', function() {
 			sync._duration.should.eql(1000);
 		});
 		it('タイマが0になった場合、BatchSyncChunkフローを実行する。', function() {
-			var stub = sinon.stub(suite.app, 'flow').returns(function () {});
+			var stub = sinon.stub(app, 'flow').returns(function() {
+			});
 			sync._duration = 1;
 			sync.tick();
 			sync._duration.should.eql(0);
 			expect(stub.calledWith('BatchSyncChunk')).to.eql(true);
-			suite.app.flow.restore();
+			app.flow.restore();
 		});
 		it('タイマが0でなく、同期待ちノートがある場合、BatchSyncNoteフローを実行する。', function() {
-			var spy = sinon.spy(suite.app, 'flow');
+			var stub = sinon.stub(app, 'flow').returns(function() {
+			});
 			sync.noteList.add('TEST-NOTE', 'AAAA');
 			sync._duration = 5;
 			sync.tick();
-			expect(spy.calledWith('BatchSyncNote')).to.eql(true);
-			suite.app.flow.restore();
+			expect(stub.calledWith('BatchSyncNote')).to.eql(true);
+			app.flow.restore();
 		});
 		it('タイマが0でなく、同期待ちノートがなく、同期待ちタグがある場合、BatchSyncTagフローを実行する。', function() {
-			var spy = sinon.spy(suite.app, 'flow');
+			var stub = sinon.stub(app, 'flow').returns(function() {
+			});
 			sync.tagList.add('TEST-TAG', 'AAAA');
 			sync._duration = 5;
 			sync.tick();
-			expect(spy.calledWith('BatchSyncChunk')).to.eql(false);
-			expect(spy.calledWith('BatchSyncTag')).to.eql(true);
-			suite.app.flow.restore();
+			expect(stub.calledWith('BatchSyncChunk')).to.eql(false);
+			expect(stub.calledWith('BatchSyncTag')).to.eql(true);
+			app.flow.restore();
 		});
 		it('タイマが残っている場合、Sync.timeoutTickを実行する。ロック中、同期待ちがある状態でも実行する。', function() {
+			var stub = sinon.stub(app, 'flow').returns(function() {
+			});
 			var spy = sinon.spy(Sync, 'timeoutTick');
 			sync._duration = 5;
 			sync.tick();
@@ -281,15 +298,16 @@ describe('components/sync', function() {
 			sync.tick();
 			expect(spy.callCount).to.eql(4);
 			Sync.timeoutTick.restore();
+			app.flow.restore();
 		});
 		it('タイマがメソッド実行前から0の場合は何もしない。', function() {
-			var spyFlow = sinon.spy(suite.app, 'flow');
+			var spyFlow = sinon.spy(app, 'flow');
 			var spyTick = sinon.spy(sync.constructor, 'timeoutTick');
 			sync._duration = 0;
 			sync.tick();
 			expect(spyFlow.called).to.eql(false);
 			expect(spyTick.called).to.eql(false);
-			suite.app.flow.restore();
+			app.flow.restore();
 			sync.constructor.timeoutTick.restore();
 		});
 	});

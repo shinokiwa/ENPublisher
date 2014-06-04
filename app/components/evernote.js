@@ -2,7 +2,7 @@ var Evernote = require ('evernote').Evernote;
 var token, publishedGuid, notebookGuid, sandbox, noteStoreUrl;
 
 module.exports = function(app) {
-	app.on('Model.LoadConfig', loadConfig);
+	app.configure(loadConfig);
 	return function() {
 		var client = new Client();
 		client._client = new Evernote.Client({
@@ -13,14 +13,14 @@ module.exports = function(app) {
 	};
 };
 
-var loadConfig = function (flow, request, response) {
-	var conf = flow.locals.configure.evernote;
+var loadConfig = function (configure, next) {
+	var conf = configure.evernote;
 	token = conf.token;
 	notebookGuid = conf.notebookGuid;
 	publishedGuid = conf.publishedGuid;
 	sandbox = conf.sandbox;
 	noteStoreUrl = conf.noteStoreUrl;
-	flow.next();
+	next();
 };
 
 var Client = function() {

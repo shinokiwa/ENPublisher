@@ -1,28 +1,33 @@
-var fakeApp = {
-		on: function () {}
-};
-var openDB = (function () {
-	if (process.env.TEST_COV) {
-		return require(__dirname+'/../../../app-cov/components/mongoose.js')(fakeApp);
-	} else {
-		return require(__dirname+'/../../../app/components/mongoose.js')(fakeApp);
-	}
-})();
-
-module.exports.init = function(callback) {
-	var db = openDB();
-	var Post = db.model('Post');
+module.exports = function(app, callback) {
+	var Post = app.use('Database').model('Post');
 	Post.remove({}, function(err) {
-		Post.create(data, function(err) {
+		Post.create(datas, function(err) {
 			callback();
 		});
 	});
 };
 
-var data = [ {
-	guid : 'TEST-DB-NOTE-GUID-1',
-	title : 'TEST-DB-TITLE-1',
-	tags : [ {
-		guid : 'TEST-PUBLISHED-GUID'
-	} ]
-} ];
+var dataPush = function() {
+	return {
+		guid : 'TEST-NOTE-GUID-' + datas.length,
+		title : 'TEST-TITLE-' + datas.length,
+		created : 1391939596000,
+		updated : 1392119875000,
+		tags : [ {
+			guid : 'TEST-PUBLISHED-GUID'
+		} ]
+	};
+};
+
+var datas = [];
+for (var i = 0; i < 31; i++) {
+	datas.push(dataPush());
+};
+
+datas.push({
+	guid : 'TEST-DB-NOTE-GUID-65',
+	title : 'TEST-DB-TITLE-65',
+	created : 1391939596000,
+	updated : 1392119875000,
+	tags : []
+});

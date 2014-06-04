@@ -1,24 +1,23 @@
-var sinon = require('sinon');
-var chai = require('chai');
-var should = chai.should(), expect = chai.expect;
+var lib = require('../testlib.js');
+var chai = lib.chai;
+var expect = chai.expect;
+var App = lib.require('app.js');
+var evernote;
 
-var suite, flow, evernote;
-var setup = require('../setup.js');
-var Evernote = require ('evernote');
-
-describe('Components.evernote', function() {
+describe('Components/evernote', function() {
 	beforeEach(function(done) {
-		suite = setup();
-		flow = suite.flow;
-		evernote = flow.use('Evernote');
-		suite.app.on('View.LoadConfig', function () {
+		var app = lib.create(__dirname+'/../unittest.configure.json');
+		app.ready(function (next) {
+			evernote = this.use('Evernote');
+			next();
 			done();
-		}).flow('LoadConfig')();
+		});
+		app.process();
 	});
 	describe('#_client', function() {
 		it('EvernoteSDKのClientの実体。基本的に外部からはアクセスしない。', function() {
-			evernote.should.have.property('_client');
-			evernote._client.should.be.instanceOf(Evernote.Evernote.Client);
+			expect(evernote).to.have.property('_client');
+			expect(evernote._client).to.be.instanceOf(require('evernote').Evernote.Client);
 		});
 	});
 	describe('#getMetaAll(offset, callback)', function() {

@@ -2,40 +2,40 @@
  * Post flow author shinokiwa@gmail.com
  */
 var Index = require('./Index.js');
-module.exports.Controller = function(flow, request, response) {
-	flow.use('Express');
+module.exports.Controller = function(request, response, nextFlow, next) {
+	this.use('Express');
 	if ('url' in request.params && request.params.url) {
-		flow.locals.url = encodeURIComponent(request.params.url);
+		this.url = encodeURIComponent(request.params.url);
 	}
-	flow.next();
+	next();
 };
 
 module.exports.Model = {
-	getPost : function(flow, request, response) {
-		if ('url' in flow.locals) {
-			var db = flow.use('Database');
+	getPost : function(request, response, nextFlow, next) {
+		if ('url' in this) {
+			var db = this.use('Database');
 			var Post = db.model('Post');
-			Post.published().and({url: flow.locals.url}).findOne(function(err, data) {
+			Post.published().and({url: this.url}).findOne(function(err, data) {
 				if (err) {
 					console.error(err);
 				} else if (data) {
 					response.locals.post = data;
 				}
-				flow.next();
+				next();
 			});
 		} else {
-			flow.next();
+			next();
 		}
 	},
 	recentPosts : Index.Model.recentPosts
 };
 
-module.exports.View = function(flow, request, response) {
+module.exports.View = function(request, response, nextFlow, next) {
 	if ('post' in response.locals) {
 		response.render('post', response.locals);
 	} else {
 		response.status(404);
 		response.render('error404', response.locals);
 	}
-	flow.next();
+	next();
 };

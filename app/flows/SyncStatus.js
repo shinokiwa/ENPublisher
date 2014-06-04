@@ -1,13 +1,13 @@
-module.exports.Controller = function(flow, request, response) {
+module.exports.Controller = function(request, response, nextFlow, next) {
 	if (request.session.logined) {
-		flow.next();
+		next();
 	} else {
 		response.redirect(302, '/setting/login/');
 	}
 };
 
-module.exports.Model = function(flow, request, response) {
-	var sync = flow.use('Sync');
+module.exports.Model = function(request, response, nextFlow, next) {
+	var sync = this.use('Sync');
 	response.locals.message = sync.message;
 	response.locals.notes = sync.noteList.all();
 	response.locals.errors = sync.errorList.all();
@@ -15,10 +15,10 @@ module.exports.Model = function(flow, request, response) {
 	response.locals.duration = sync._duration;
 	response.locals.lastSyncAll = sync.lastSyncAll;
 	response.locals.lastSync = sync.lastSync;
-	flow.next();
+	next();
 };
 
-module.exports.View = function(flow, request, response) {
+module.exports.View = function(request, response, nextFlow, next) {
 	response.render('setting/sync', response.locals);
-	flow.next();
+	next();
 };

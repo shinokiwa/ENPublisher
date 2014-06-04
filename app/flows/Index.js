@@ -1,7 +1,7 @@
 /**
  * Index flow author shinokiwa@gmail.com
  */
-module.exports.Controller = function(flow, request, response) {
+module.exports.Controller = function(request, response, nextFlow, next) {
 	var page;
 	if (request.query.page) {
 		page = parseInt(request.query.page);
@@ -10,26 +10,25 @@ module.exports.Controller = function(flow, request, response) {
 	}
 	response.locals.page = page;
 	response.locals.startIndex = page * 20;
-	flow.use('Express');
-	flow.next();
+	this.use('Express');
+	next();
 };
 
 module.exports.Model = {
-	countPosts : function(flow, request, response) {
-		var db = flow.use('Database');
+	countPosts : function(request, response, nextFlow, next) {
+		var db = this.use('Database');
 		var Post = db.model('Post');
 		Post.published().count(function(err, count) {
 			if (err) {
 				console.error(err);
-				flow.next();
 			} else {
 				response.locals.totalPosts = count;
-				flow.next();
 			}
+			next();
 		});
 	},
-	getPosts : function(flow, request, response) {
-		var db = flow.use('Database');
+	getPosts : function(request, response, nextFlow, next) {
+		var db = this.use('Database');
 		var Post = db.model('Post');
 		Post.published().setOptions({
 			limit : 20,
@@ -40,15 +39,14 @@ module.exports.Model = {
 		}).exec(function(err, data) {
 			if (err) {
 				console.error(err);
-				flow.next();
 			} else {
 				response.locals.posts = data;
-				flow.next();
 			}
+			next();
 		});
 	},
-	recentPosts : function(flow, request, response) {
-		var db = flow.use('Database');
+	recentPosts : function(request, response, nextFlow, next) {
+		var db = this.use('Database');
 		var Post = db.model('Post');
 		Post.published().select({
 			title : 1,
@@ -61,16 +59,15 @@ module.exports.Model = {
 		}).exec(function(err, data) {
 			if (err) {
 				console.error(err);
-				flow.next();
 			} else {
 				response.locals.recentPosts = data;
-				flow.next();
 			}
+			next();
 		});
 	}
 };
 
-module.exports.View = function(flow, request, response) {
+module.exports.View = function(request, response, nextFlow, next) {
 	response.render('index', response.locals);
-	flow.next();
+	next();
 };

@@ -3,9 +3,9 @@ var app, sync;
 
 module.exports = function(App) {
 	app = App;
-	app.on('Model.LoadConfig', function(flow) {
+	app.configure(function(configure, next) {
 		loadConfig();
-		flow.next();
+		next();
 	});
 	loadConfig();
 	return function() {

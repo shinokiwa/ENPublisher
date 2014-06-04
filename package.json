@@ -21,7 +21,8 @@
   "devDependencies": {
     "mocha": "1.17.x",
     "chai": "1.9.x",
-    "shinon": "1.9.x"
+    "shinon": "1.9.x",
+    "selenium-webdriver": "2.42.x"
   },
   "repository": {
     "type": "git",

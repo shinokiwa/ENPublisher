@@ -1,41 +1,42 @@
 /**
  * FindId flow author shinokiwa@gmail.com
  */
-module.exports.Controller = function(flow, request, response) {
-	flow.use('Express');
+module.exports.Controller = function(request, response, nextFlow, next) {
+	this.use('Express');
 	if ('id' in request.params && request.params.id) {
-		flow.locals.id = encodeURIComponent(request.params.id);
+		this.id = encodeURIComponent(request.params.id);
 	}
-	flow.next();
+	next();
 };
 
-module.exports.Model = function(flow, request, response) {
-	if ('id' in flow.locals) {
-		var db = flow.use('Database');
+module.exports.Model = function(request, response, nextFlow, next) {
+	if ('id' in this) {
+		var db = this.use('Database');
 		var Post = db.model('Post');
+		var self = this;
 		Post.published().and({
-			guid : flow.locals.id
+			guid : this.id
 		}).select({
 			url : 1
 		}).findOne(function(err, data) {
 			if (err) {
 				console.error(err);
 			} else if (data) {
-				flow.locals.url = data.url;
+				self.url = data.url;
 			}
-			flow.next();
+			next();
 		});
 	} else {
-		flow.next();
+		next();
 	}
 };
 
-module.exports.View = function(flow, request, response) {
-	if ('url' in flow.locals) {
-		response.redirect(302, '/post/'+flow.locals.url);
+module.exports.View = function(request, response, nextFlow, next) {
+	if ('url' in this) {
+		response.redirect(302, '/post/'+this.url);
 	} else {
 		response.status(404);
 		response.render('error404', response.locals);
 	}
-	flow.next();
+	next();
 };

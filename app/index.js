@@ -5,9 +5,7 @@
  */
 module.exports.create = function (configurePath) {
 	var App = require ('./app.js');
-	var app = new App();
-	app.add('LoadConfig', loadFlow('LoadConfig')(configurePath));
-	app.add('StartProcess', loadFlow('StartProcess'));
+	var app = new App(configurePath);
 
 	//set components
 	app.set('Express', loadCom('express')(app, require ('express')));

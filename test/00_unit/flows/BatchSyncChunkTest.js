@@ -1,134 +1,132 @@
-var chai = require('chai');
-var should = chai.should(), expect = chai.expect;
-
-var setup = require('../setup.js');
-var suite,flow, test;
-
-var data = require ('../data/evernote.js');
+var lib = require('../testlib.js');
+var chai = lib.chai;
+var expect = chai.expect;
+var sinon = lib.sinon;
+var App = lib.require('app.js');
+var test, sync, app;
 
 describe('flows/BatchSyncChunk', function() {
 	beforeEach(function(done) {
-		suite = setup(function () {
+		app = lib.create(__dirname + '/../unittest.configure.json');
+		app.ready(function(next) {
+			test = new app.flows.BatchSyncChunk();
+			sync = test.use('Sync');
 			done();
 		});
-		flow = suite.flow;
-		test = suite.require('flows/BatchSyncChunk.js');
+		app.process();
+	});
+	afterEach(function() {
+		if (test.lock) {
+			sync.unlock(test.lock);
+		}
 	});
 	describe('#Controller', function() {
-		it('Syncコンポーネントからロックを取得して、flow.locals.lockにキーを保持する。', function(done) {
-			flow.next = function() {
-				var sync = flow.use('Sync');
-				sync.lock('Test').should.eql(0);
-				expect(flow.locals).to.have.property('lock');
-				expect(flow.locals.lock).to.not.eql(undefined);
-				expect(flow.locals.lock).to.not.eql(null);
-				expect(flow.locals.lock).to.not.eql(0);
+		it('Syncコンポーネントからロックを取得して、this.lockにキーを保持する。', function(done) {
+			var next = function() {
+				expect(sync.lock('Test')).to.eql(0);
+				expect(test).to.have.property('lock');
+				expect(test.lock).to.not.eql(undefined);
+				expect(test.lock).to.not.eql(null);
+				expect(test.lock).to.not.eql(0);
 				done();
 			};
-			test.Controller(flow);
+			test.step('Controller',next)();
 		});
 		it('ロック取得に失敗した場合はエラーBatchSyncChunkを残して終了。', function(done) {
-			var sync = flow.use('Sync');
-			sync.lock('Test').should.not.eql(0);
-			flow.next = function() {
+			var unlock = sync.lock('Test');
+			expect(unlock).to.not.eql(0);
+			var next = function() {
 				throw new Error('flow.next should not be called.');
 			};
 			setTimeout(function() {
 				var error = sync.errorList.get();
-				error.should.have.property('key', 'BatchSyncChunk');
-				error.should.have.property('body');
+				expect(error).to.have.property('key', 'BatchSyncChunk');
+				expect(error).to.have.property('body');
+				sync.unlock(unlock);
 				done();
 			}, 5);
-			test.Controller(flow);
+			test.step('Controller',next)();
 		});
 	});
 
 	describe('#Model', function(done) {
 		it('SyncコンポーネントのUSNとEvernoteのUSNを比較して、Evernote側が大きい時に差分を同期する。最大100件。', function(done) {
-			var sync = flow.use('Sync');
 			sync.USN = 12;
-			flow.next = function() {
+			var next = function() {
 				var list = sync.noteList.all();
 				expect(list).to.length(100);
 				expect(list[0]).to.have.property('key', 'TEST-NOTE-GUID-0');
 				expect(list[0]).to.have.property('body', 'TEST-TITLE-0');
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
-		it('USNが同値の時は同期しない。なお、比較するUSNはchunkHighUSNになる。', function (done) {
-			var sync = flow.use('Sync');
+		it('USNが同値の時は同期しない。なお、比較するUSNはchunkHighUSNになる。', function(done) {
 			sync.USN = 10000;
-			flow.next = function() {
+			var next = function() {
 				var list = sync.noteList.all();
 				expect(list).to.length(0);
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
-		it('SyncコンポーネントのUSNの方が大きい時は、同期せずUSNをEvernote側に一致させる。', function (done) {
-			var sync = flow.use('Sync');
+		it('SyncコンポーネントのUSNの方が大きい時は、同期せずUSNをEvernote側に一致させる。', function(done) {
 			sync.USN = 50000;
-			flow.next = function() {
+			var next = function() {
 				var list = sync.noteList.all();
 				expect(list).to.length(0);
 				expect(sync.USN).to.eql(10000);
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
-		it('SyncコンポーネントのUSNがnullの時は同期せず、USNをEvernote側に一致させる。', function (done) {
-			var sync = flow.use('Sync');
+		it('SyncコンポーネントのUSNがnullの時は同期せず、USNをEvernote側に一致させる。', function(done) {
 			sync.USN = null;
-			flow.next = function() {
+			var next = function() {
 				var list = sync.noteList.all();
 				expect(list).to.length(0);
 				expect(sync.USN).to.eql(10000);
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
 		it('リスト同期完了後はSyncコンポーネントのUSN、lastSyncを更新する。', function(done) {
-			var sync = flow.use('Sync');
 			sync.USN = 56;
-			flow.next = function() {
-				sync.USN.should.eql(10000);
+			var next = function() {
+				expect(sync.USN).to.eql(10000);
 				expect(sync.lastSyncAll).to.eql(null);
 				expect(sync.lastSync).to.be.instanceOf(Date);
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
 		it('同期しなかった場合、lastSyncは更新しない。', function(done) {
-			var sync = flow.use('Sync');
 			sync.USN = null;
-			flow.next = function() {
-				sync.USN.should.eql(10000);
+			var next = function() {
+				expect(sync.USN).to.eql(10000);
 				expect(sync.lastSync).to.eql(null);
 				done();
 			};
-			test.Model(flow);
+			test.step('Model',next)();
 		});
 	});
 	describe('#View', function() {
 		it('Syncをflow.locals.lockを使ってアンロックする。', function(done) {
-			var sync = flow.use('Sync');
-			flow.locals.lock = sync.lock('Test-lock');
-			flow.next = function() {
+			test.lock = sync.lock('Test-lock');
+			var next = function() {
 				expect(sync.lock('test')).to.not.eql(0);
 				done();
 			};
-			test.View(flow);
+			test.step('View',next)();
 		});
 		it('Syncのdurationを1分に設定する。', function(done) {
-			var sync = flow.use('Sync');
-			flow.locals.lock = sync.lock('Test-lock');
+			test.lock = sync.lock('Test-lock');
 			expect(sync._duration).to.not.eql(60);
-			flow.next = function() {
+			var next = function() {
 				expect(sync._duration).to.eql(60);
 				done();
 			};
-			test.View(flow);
+			test.step('View',next)();
 		});
 	});
 });

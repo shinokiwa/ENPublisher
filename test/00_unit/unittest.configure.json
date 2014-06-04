@@ -2,8 +2,9 @@
 	"site": {
 		"title": "",
 		"analytics": "",
-		"loginId": "",
-		"loginPassword": ""
+		"loginId": "TestId",
+		"loginPassword": "TestPassword",
+		"port": "8080"
 	},
 	
 	"evernote": {

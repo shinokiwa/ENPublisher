@@ -5,11 +5,11 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var morgan = require('morgan');
+var server;
 
 module.exports = function(app) {
 	var express = Express();
 	var router = Express.Router();
-	express.set('port', 80);
 	express.set('views', path.join(__dirname, '../../templates/default'));
 	express.set('view engine', 'jade');
 	express.use(bodyParser());
@@ -37,20 +37,27 @@ module.exports = function(app) {
 	router.get('/setting/sync/', app.flow('SyncStatus'));
 	router.get('/setting/dosyncall/', app.flow('DoSyncAll'));
 	
-	app.on('Model.LoadConfig', function(flow) {
-		express.locals.site = flow.locals.configure.site;
-		flow.next();
+	app.configure(function(configure,next) {
+		express.locals.site = configure.site;
+		express.set('port', configure.site.port);
+		next();
 	});
 
-	app.on('Model.StartProcess', function(flow) {
-		http.createServer(express).listen(express.get('port'), function() {
-			console.log("Express server listening on port " + (express.get('port')));
-		});
-		flow.next();
+	app.ready(function(next) {
+		var open = function () {
+			server = http.createServer(express);
+			server.listen(express.get('port'), function() {
+				next();
+			});
+		};
+		if (server) {
+			server.close(open);
+		} else {
+			open();
+		}
 	});
 
-	return function (request, response) {
-		response.locals.site = express.locals.site;
+	return function () {
 		return express;
 	};
 };

@@ -2,18 +2,18 @@
  * Login flow
  * author shinokiwa@gmail.com
  */
-module.exports.Controller = function (flow, request, response) {
+module.exports.Controller = function (request, response, nextFlow, next) {
 	if ('logined' in request.session && request.session.logined) {
 		response.redirect (302, '/setting/sync/');
 	} else {
 		response.locals.id = '';
 		response.locals.password = '';
-		flow.next();
+		next();
 	}
 };
 
-module.exports.View = function (flow, request, response) {
+module.exports.View = function (request, response, nextFlow, next) {
 	response.render('setting/login', response.locals);
-	flow.next();
+	next();
 };
 

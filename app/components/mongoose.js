@@ -11,18 +11,18 @@ db.on('connected', function () {
 
 var host, database,port;
 
-var load = function (flow) {
-	host = flow.locals.configure.mongoose.host;
-	database = flow.locals.configure.mongoose.database;
-	port = flow.locals.configure.mongoose.port;
+var load = function (configure,next) {
+	host = configure.mongoose.host;
+	database = configure.mongoose.database;
+	port = configure.mongoose.port;
 	var Post = db.model('Post');
-	Post.setPublished(flow.locals.configure.evernote.publishedGuid);
-	Post.setSiteDomain(flow.locals.configure.site.domain);
-	flow.next();
+	Post.setPublished(configure.evernote.publishedGuid);
+	Post.setSiteDomain(configure.site.domain);
+	next();
 };
 
 module.exports = function (app) {
-	app.on('Model.LoadConfig', load);
+	app.configure(load);
 	return function () {
 		if (db._readyState == 0 || db._readyState == 3) {
 			db.open(host, database, port);

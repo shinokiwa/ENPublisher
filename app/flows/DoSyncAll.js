@@ -7,11 +7,11 @@ var syncStatus = require('./SyncStatus.js');
 
 module.exports.Controller = syncStatus.Controller;
 
-module.exports.Model = function(flow, request, response) {
-	var sync = flow.use('Sync');
+module.exports.Model = function(request, response, nextFlow, next) {
+	var sync = this.use('Sync');
 	sync.doSyncAll();
-	flow.next();
+	next();
 };
-module.exports.View = function(flow, request, response) {
+module.exports.View = function(request, response, nextFlow, next) {
 	response.redirect(302, '/setting/sync/');
 };

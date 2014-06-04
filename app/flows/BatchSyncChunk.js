@@ -1,28 +1,28 @@
-module.exports.Controller = function(flow) {
-	var sync = flow.use('Sync');
-	flow.locals.lock = sync.lock('Processing BatchSyncChunk.');
-	if (flow.locals.lock) {
-		flow.next();
+module.exports.Controller = function(next) {
+	var sync = this.use('Sync');
+	this.lock = sync.lock('Processing BatchSyncChunk.');
+	if (this.lock) {
+		next();
 	} else {
 		sync.errorList.add('BatchSyncChunk', 'Failed to get lock.');
 	}
 };
 
-module.exports.Model = function(flow) {
-	var sync = flow.use('Sync');
-	var evernote = flow.use('Evernote');
+module.exports.Model = function(next) {
+	var sync = this.use('Sync');
+	var evernote = this.use('Evernote');
 	evernote.getSyncState(function(err, state) {
 		if (err) {
-			sync.errorList.add(flow.name, JSON.stringify(err));
-			flow.next();
+			sync.errorList.add('BatchSyncChunk', JSON.stringify(err));
+			next();
 		} else {
-			if (!sync.USN || sync.USN > state.updateCount) {
+			if (!sync.USN || sync.USN >= state.updateCount) {
 				sync.USN = state.updateCount;
-				flow.next();
-			} else if (state.updateCount > sync.USN) {
+				next();
+			} else {
 				evernote.getSyncChunk(sync.USN, function(err, chunk) {
 					if (err) {
-						sync.errorList.add(flow.name, JSON.stringify(err));
+						sync.errorList.add('BatchSyncChunk', JSON.stringify(err));
 					} else {
 						if ('notes' in chunk && chunk.notes) {
 							chunk.notes.forEach(function(note) {
@@ -32,19 +32,17 @@ module.exports.Model = function(flow) {
 						sync.USN = chunk.chunkHighUSN;
 						sync.lastSync = new Date();
 					}
-					flow.next();
+					next();
 				});
 
-			} else {
-				flow.next();
 			}
 		}
 	});
 };
 
-module.exports.View = function(flow) {
-	var sync = flow.use('Sync');
-	sync.unlock(flow.locals.lock);
+module.exports.View = function(next) {
+	var sync = this.use('Sync');
+	sync.unlock(this.lock);
 	sync.duration(60);
-	flow.next();
+	next();
 };
