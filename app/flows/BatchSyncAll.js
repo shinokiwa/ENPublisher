@@ -1,4 +1,6 @@
-module.exports.Controller = function(next) {
+module.exports.steps = ['Lock', 'Note', 'Database', 'Tag', 'Unlock'];
+
+module.exports.Lock = function(next) {
 	var sync = this.use('Sync');
 	this.lock = sync.lock('Processing BatchSyncAll.');
 	if (this.lock) {
@@ -9,8 +11,7 @@ module.exports.Controller = function(next) {
 	}
 };
 
-module.exports.Model = {};
-var syncEvernote = module.exports.Model.Evernote = function(next) {
+var syncEvernote = module.exports.Note = function(next) {
 	var sync = this.use('Sync');
 	var evernote = this.use('Evernote');
 	var self = this;
@@ -41,7 +42,7 @@ var syncEvernote = module.exports.Model.Evernote = function(next) {
 	});
 };
 
-module.exports.Model.Database = function(next) {
+module.exports.Database = function(next) {
 	var sync = this.use('Sync');
 	var Post = this.use('Database').model('Post');
 	Post.find({}, {
@@ -57,7 +58,19 @@ module.exports.Model.Database = function(next) {
 	});
 };
 
-module.exports.View = function(next) {
+module.exports.Tag = function(next) {
+	var sync = this.use('Sync');
+	var evernote = this.use('Evernote');
+	evernote.listTagsByNotebook(function(err, list) {
+		if (list) {
+			list.forEach(function(tag) {
+				sync.tagList.add(tag.guid, tag.name);
+			});
+		}
+		next();
+	});
+};
+module.exports.Unlock = function(next) {
 	var sync = this.use('Sync');
 	sync.unlock(this.lock);
 	sync.duration(15 * 60);

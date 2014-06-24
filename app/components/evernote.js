@@ -68,3 +68,8 @@ Client.prototype.getNote = function(guid, next) {
 		}
 	});
 };
+
+Client.prototype.listTagsByNotebook = function(next) {
+	var noteStore = this._client.getNoteStore(noteStoreUrl);
+	noteStore.listTagsByNotebook(notebookGuid,next);
+};

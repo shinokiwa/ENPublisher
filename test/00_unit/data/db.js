@@ -9,8 +9,8 @@ module.exports = function(app, callback) {
 
 var dataPush = function() {
 	return {
-		guid : 'TEST-NOTE-GUID-' + datas.length,
-		title : 'TEST-TITLE-' + datas.length,
+		guid : 'TEST-DB-NOTE-GUID-' + datas.length,
+		title : 'TEST-DB-TITLE-' + datas.length,
 		created : 1391939596000,
 		updated : 1392119875000,
 		tags : [ {

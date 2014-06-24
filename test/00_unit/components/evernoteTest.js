@@ -85,4 +85,15 @@ describe('Components/evernote', function() {
 			});
 		});
 	});
+	describe('#listTagsByNotebook(next)', function() {
+		it('公開しているノートブック内のタグを取得する。', function(done) {
+			evernote.listTagsByNotebook(function(err, data) {
+				expect(err).to.eql(null);
+				expect(data).to.length(10);
+				expect(data[0]).to.have.property('guid', 'TEST-TAG-GUID-1');
+				expect(data[0]).to.have.property('name', 'TEST-TAG-1');
+				done();
+			});
+		});
+	});
 });

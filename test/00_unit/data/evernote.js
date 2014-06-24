@@ -82,6 +82,17 @@ NoteStore.prototype.getSyncState = function(callback) {
 	callback(null, state);
 };
 
+NoteStore.prototype.listTagsByNotebook = function(guid, callback) {
+	var tags = new Array();
+	for (var i=1;i<=10;i++) {
+		tags.push(new Evernote.Tag({
+			guid: 'TEST-TAG-GUID-'+i,
+			name: 'TEST-TAG-'+i
+		}));
+	}
+	callback(null, tags);
+};
+
 var testAttributes = new Evernote.NoteAttributes({
 	subjectDate : null,
 	latitude : null,
